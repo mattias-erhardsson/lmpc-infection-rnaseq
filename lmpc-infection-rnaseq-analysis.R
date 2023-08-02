@@ -1,44 +1,85 @@
 ################################## Set seed for reproducibility
 set.seed(1337)
 
-################################## Load packages
-#lapply(
-#  c(
-#    "renv", # For project management
-#    "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues
-#    "tidyverse", # Data wrangling, processing and presentation
-#    "lubridate", # Working with dates, part of tidyverse but not automatically loaded with it
-#    "svglite", # To make svg files with ggsave
-#    "writexl", # Writing excel files
-#    "DESeq2", # Differential gene expression
-#    "IHW", # Better power for adjusting p-values of differential gene expression
-#    "tximport", # Importing RNAseq pipeline data
-#    "tximportData", # Importing RNAseq pipeline data
-#    "umap", # For umap, Uniform Manifold Approximation and Projection
-#    "EnsDb.Mmusculus.v79", # ensdb package for mouse
-#    "ensembldb", # For getting gene lengths necessary for TPM calculation
-#    "SetRank", # For the SetRank GSEA
-#    "biomaRt", # For annotation and GO gene sets
-#    "org.Mm.eg.db", # For GO term annotation, might be used instead of biomaRt
-#    "reactome.db", # For annotationdbi of reactome
-#    "GO.db", # For GO term annotation, might be used instead of biomaRt
-#    "KEGGREST", # For KEGG
-#    "styler", # R studio addin for interactively adhere to the tidyverse style guide
-#    "grateful" # For citing packages used
-#  ),
-#  library,
-#  character.only = TRUE
-#)
-#renv::init()
+################################## Install and load renv 1.0.0
+library("devtools")
 
-install.packages("grateful", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+renv::clean()
+renv::deactivate()
+unloadNamespace("renv")
+root <- renv::paths$root()
+unlink(root, recursive = TRUE)
+utils::remove.packages("renv")
 
-################################## Load packages
+devtools::install_version("renv", version = "1.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+
+library("renv")
+
+renv::activate()
+
+renv::restore()
+
+#renv::install("tidyverse@2.0.0")
+#Y
+
+#renv::install("bioc::IHW")
+#Y
+
+#renv::install("bioc::tximport")
+#Y
+
+#renv::install("bioc::tximportData")
+#Y
+
+#renv::install("RcppEigen@0.3.3.9.3")
+#Y
+
+#renv::install("umap@0.2.10.0")
+#Y
+
+#renv::install("SetRank@1.1.0")
+#Y
+
+#renv::install("bioc::EnsDb.Mmusculus.v79")
+#Y
+
+#renv::install("bioc::ensembldb")
+#Y
+
+#renv::install("bioc::biomaRt")
+#Y
+
+#renv::install("bioc::org.Mm.eg.db")
+#Y
+
+#renv::install("bioc::reactome.db")
+#Y
+
+#renv::install("bioc::GO.db")
+#Y
+
+#renv::install("bioc::KEGGREST")
+#Y
+
+#renv::install("styler@1.10.0")
+#Y
+
+#renv::install("grateful@0.2.0")
+#Y
+
+#devtools::install_version("tidyverse", version = "2.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+#3
+
+################################## Load packages, commented out what loaded packages for renv
 lapply(
   c(
+    "devtools", # If new packages of a specific version needs to be installed
     "renv", # For project management
+    "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues
-    "tidyverse", # Data wrangling, processing and presentation
+    "tidyverse", # Data wrangling, processing and presentation. Does not seem to work with renv, so individual packages need to be loaded in this environment
+    "vroom", # Faster data wrangling
+    "readr", # Data wrangling
     "lubridate", # Working with dates, part of tidyverse but not automatically loaded with it
     "svglite", # To make svg files with ggsave
     "writexl", # Writing excel files
@@ -61,6 +102,21 @@ lapply(
   library,
   character.only = TRUE
 )
+
+################################## Initialized renv, commented these commands out after first initialisation
+#renv::init()
+
+#renv::deactivate()
+
+#renv::activate()
+
+#renv::status()
+
+#renv::snapshot()
+
+#renv::clean()
+
+#renv::restore()
 
 sessionInfo()
 
@@ -1480,27 +1536,11 @@ annotationTable <- rbind(
   dplyr::filter(dbName != "")
 
 
-########################################## Small scale test of SetRank
-## Create background reference gene set for SetRank
-## The background will be all genes with at least 1 count in 1 sample
-nrow(annotationTable %>%
-       dplyr::filter(dbName == "KEGG"))
-
-nrow(annotationTable %>%
-       dplyr::filter(dbName == "Reactome"))
-
-nrow(annotationTable %>%
-       dplyr::filter(dbName == "cellular_component"))
-
-nrow(annotationTable %>%
-       dplyr::filter(dbName == "biological_process"))
-
-nrow(annotationTable %>%
-       dplyr::filter(dbName == "molecular_function"))
-
+########################################## Small scale test of SetRank, later commented out
+# Create background reference gene set for SetRank
+# The background will be all genes with at least 1 count in 1 sample
 annotationTableTest <- annotationTable %>%
-  dplyr::filter(dbName == "Reactome")
-
+  dplyr::filter(dbName == "KEGG")
 referenceSetTest <- genes_for_annotation %>%
   dplyr::filter(Gene_Detected == TRUE) %>%
   dplyr::filter(GeneSymbol %in% annotationTableTest$geneID) %>%
@@ -1508,20 +1548,17 @@ referenceSetTest <- genes_for_annotation %>%
   dplyr::select(GeneSymbol) %>%
   distinct() %>%
   deframe()
-
-## Create set collection object for SetRank
+# Create set collection object for SetRank
 parallel::detectCores(all.tests = FALSE, logical = TRUE)
-options(mc.cores = 10) # Adapt to the number of cores you use
+options(mc.cores = 1) # Adapt to the number of cores you use
 collectionTest <- buildSetCollection(annotationTableTest,
                                      referenceSet = referenceSetTest,
                                      maxSetSize = 100 # Default is 500
 )
-
-## Use SetRank in ranked mode
-## The genes can be ranked in many different ways
-## In this case, I use adjusted p-value since this seems to be what is recommended by the paper
-
-## Gene identifiers ranked by adjusted p-value
+# Use SetRank in ranked mode
+# The genes can be ranked in many different ways
+# In this case, I use adjusted p-value since this seems to be what is recommended by the paper
+# Gene identifiers ranked by adjusted p-value
 geneIDsTest <- Combined_Results_DF %>%
   dplyr::filter(GeneSymbol %in% referenceSetTest) %>%
   dplyr::select(
@@ -1532,9 +1569,8 @@ geneIDsTest <- Combined_Results_DF %>%
   arrange(adj_pvalue) %>%
   dplyr::select(GeneSymbol) %>%
   deframe()
-
-## And now for the actual SetRank analysis.
-## CAUTION! Might take several days to complete.
+# And now for the actual SetRank analysis.
+# CAUTION! Might take several days to complete.
 networkTest <- setRankAnalysis(
   geneIDs = geneIDsTest, # Gene list ranked by adjusted p-value
   setCollection = collectionTest, # SetRank collection from above
@@ -1543,7 +1579,7 @@ networkTest <- setRankAnalysis(
   fdrCutoff = 0.05
 ) # This is default of 0.05
 
-## Export results
+# Export results
 exportSingleResult(
   network = networkTest,
   selectedGenes = geneIDsTest,
@@ -1587,12 +1623,6 @@ geneIDs <- Combined_Results_DF %>%
   arrange(adj_pvalue) %>%
   dplyr::select(GeneSymbol) %>%
   deframe()
-
-geneIDs[duplicated(geneIDs)]
-
-geneIDs[!geneIDs %in% referenceSet]
-
-referenceSet[!referenceSet %in% geneIDs]
 
 ## And now for the actual SetRank analysis.
 ## CAUTION! Might take several days to complete.
