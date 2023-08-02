@@ -4,6 +4,75 @@ set.seed(1337)
 ################################## The module seems to lack grateful, so install that
 install.packages("grateful")
 
+################################## Install and load renv 1.0.0
+#library("devtools")
+
+#renv::clean()
+#renv::deactivate()
+#unloadNamespace("renv")
+#root <- renv::paths$root()
+#unlink(root, recursive = TRUE)
+#utils::remove.packages("renv")
+
+#devtools::install_version("renv", version = "1.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+
+#library("renv")
+
+#renv::activate()
+
+#renv::restore()
+
+#renv::install("tidyverse@2.0.0")
+#Y
+
+#renv::install("bioc::IHW")
+#Y
+
+#renv::install("bioc::tximport")
+#Y
+
+#renv::install("bioc::tximportData")
+#Y
+
+#renv::install("RcppEigen@0.3.3.9.3")
+#Y
+
+#renv::install("umap@0.2.10.0")
+#Y
+
+#renv::install("SetRank@1.1.0")
+#Y
+
+#renv::install("bioc::EnsDb.Mmusculus.v79")
+#Y
+
+#renv::install("bioc::ensembldb")
+#Y
+
+#renv::install("bioc::biomaRt")
+#Y
+
+#renv::install("bioc::org.Mm.eg.db")
+#Y
+
+#renv::install("bioc::reactome.db")
+#Y
+
+#renv::install("bioc::GO.db")
+#Y
+
+#renv::install("bioc::KEGGREST")
+#Y
+
+#renv::install("styler@1.10.0")
+#Y
+
+#renv::install("grateful@0.2.0")
+#Y
+
+#devtools::install_version("tidyverse", version = "2.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+#3
+
 ################################## Load packages, commented out what loaded packages for renv
 lapply(
   c(
@@ -37,6 +106,21 @@ lapply(
   library,
   character.only = TRUE
 )
+
+################################## Initialized renv, commented these commands out after first initialisation
+#renv::init()
+
+#renv::deactivate()
+
+#renv::activate()
+
+#renv::status()
+
+#renv::snapshot()
+
+#renv::clean()
+
+#renv::restore()
 
 sessionInfo()
 
