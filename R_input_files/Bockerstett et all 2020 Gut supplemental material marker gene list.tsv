@@ -1,0 +1,40 @@
+GeneSymbol	Cluster	Cell_Type
+Tff1	0	Foveolar cells
+Muc5ac	0	Foveolar cells
+Il33	0	Foveolar cells
+Muc6	1	Mucous neck cells
+Tff1	2	Foveolar cells
+Muc5ac	2	Foveolar cells
+Pga5	3	Metaplastic cells
+Muc6	3	Metaplastic cells
+Pgc	3	Metaplastic cells
+Clu	3	Metaplastic cells
+Sox9	3	Metaplastic cells
+Atp4b	4	Parietal cells
+Atp4a	4	Parietal cells
+Muc6	5	Mucous neck cells
+Pgc	6	Gastric chief cells
+Gif	6	Gastric chief cells
+Gif	7	Gastric chief cells
+Pgc	7	Gastric chief cells
+Mki67	8	Proliferating Tff2+ cells
+Cdk1	8	Proliferating Tff2+ cells
+Pcna	8	Proliferating Tff2+ cells
+Tff2	8	Proliferating Tff2+ cells
+Acta2	9	Smooth muscle cells
+Myl9	9	Smooth muscle cells
+Pecam1	10	Endothelial cells
+Ptprc	11	T cells/B cells
+Cd3e	11	T cells/B cells
+Igkc	11	T cells/B cells
+Lyz2	12	Macrophages
+Csf1r	12	Macrophages
+Cd14	12	Macrophages
+Chga	13	Enterochromaffin cells
+Chgb	13	Enterochromaffin cells
+Hdc	13	Enterochromaffin cells
+Sst	13	Enterochromaffin cells
+Trbc2	14	T cells/B cells
+Cd3d	14	T cells/B cells
+Ptprc	14	T cells/B cells
+Ighm	14	T cells/B cells

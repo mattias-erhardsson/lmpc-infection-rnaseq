@@ -1,0 +1,110 @@
+[2022-08-09 10:23:00.567] [jointLog] [info] setting maxHashResizeThreads to 6
+[2022-08-09 10:23:00.567] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2022-08-09 10:23:00.569] [jointLog] [info] numQuantThreads = 3
+[2022-08-09 10:23:02.100] [fileLog] [info] quantification processed 0 fragments so far
+
+[2022-08-09 10:23:01.901] [jointLog] [info] replaced 3 non-ACGT nucleotides with random nucleotides
+[2022-08-09 10:23:04.418] [fileLog] [info] quantification processed 1000000 fragments so far
+
+[2022-08-09 10:23:06.561] [fileLog] [info] quantification processed 2000000 fragments so far
+
+[2022-08-09 10:23:07.360] [jointLog] [info] 
+
+The alignment group queue pool has been exhausted.  1836966 extra fragments were allocated on the heap to saturate the pool.  No new fragments will be allocated
+
+
+[2022-08-09 10:23:16.659] [fileLog] [info] quantification processed 3000000 fragments so far
+
+[2022-08-09 10:23:31.383] [fileLog] [info] quantification processed 4000000 fragments so far
+
+[2022-08-09 10:23:46.113] [fileLog] [info] quantification processed 5000000 fragments so far
+
+[2022-08-09 10:24:00.848] [fileLog] [info] quantification processed 6000000 fragments so far
+
+[2022-08-09 10:24:15.189] [fileLog] [info] quantification processed 7000000 fragments so far
+
+[2022-08-09 10:24:17.189] [fileLog] [info] quantification processed 8000000 fragments so far
+
+[2022-08-09 10:24:19.156] [fileLog] [info] quantification processed 9000000 fragments so far
+
+[2022-08-09 10:24:21.037] [fileLog] [info] quantification processed 10000000 fragments so far
+
+[2022-08-09 10:24:22.980] [fileLog] [info] quantification processed 11000000 fragments so far
+
+[2022-08-09 10:24:24.840] [fileLog] [info] quantification processed 12000000 fragments so far
+
+[2022-08-09 10:24:26.497] [fileLog] [info] quantification processed 13000000 fragments so far
+
+[2022-08-09 10:24:28.375] [fileLog] [info] quantification processed 14000000 fragments so far
+
+[2022-08-09 10:24:30.357] [fileLog] [info] quantification processed 15000000 fragments so far
+
+[2022-08-09 10:24:32.299] [fileLog] [info] quantification processed 16000000 fragments so far
+
+[2022-08-09 10:24:34.321] [fileLog] [info] quantification processed 17000000 fragments so far
+
+[2022-08-09 10:24:36.813] [fileLog] [info] quantification processed 18000000 fragments so far
+
+[2022-08-09 10:24:46.991] [fileLog] [info] quantification processed 19000000 fragments so far
+
+[2022-08-09 10:24:48.671] [fileLog] [info] quantification processed 20000000 fragments so far
+
+[2022-08-09 10:24:50.712] [fileLog] [info] quantification processed 21000000 fragments so far
+
+[2022-08-09 10:24:52.687] [fileLog] [info] quantification processed 22000000 fragments so far
+
+[2022-08-09 10:24:54.569] [fileLog] [info] quantification processed 23000000 fragments so far
+
+[2022-08-09 10:24:56.422] [fileLog] [info] quantification processed 24000000 fragments so far
+
+[2022-08-09 10:24:58.433] [fileLog] [info] quantification processed 25000000 fragments so far
+
+[2022-08-09 10:25:00.453] [fileLog] [info] quantification processed 26000000 fragments so far
+
+[2022-08-09 10:25:02.322] [fileLog] [info] quantification processed 27000000 fragments so far
+
+[2022-08-09 10:25:04.026] [fileLog] [info] quantification processed 27872423 fragments so far
+
+[2022-08-09 10:25:04.230] [jointLog] [info] Thread saw mini-batch with a maximum of 11.00% zero probability fragments
+[2022-08-09 10:25:04.231] [jointLog] [info] Thread saw mini-batch with a maximum of 10.50% zero probability fragments
+[2022-08-09 10:25:04.232] [jointLog] [info] Thread saw mini-batch with a maximum of 12.90% zero probability fragments
+[2022-08-09 10:25:04.232] [jointLog] [info] 
+
+
+Completed first pass through the alignment file.
+Total # of mapped reads : 27872423
+# of uniquely mapped reads : 16409442
+# ambiguously mapped reads : 11462981
+
+
+
+[2022-08-09 10:25:04.315] [jointLog] [info] Computed 168875 rich equivalence classes for further processing
+[2022-08-09 10:25:04.315] [jointLog] [info] Counted 26133996 total reads in the equivalence classes 
+[2022-08-09 10:25:04.316] [jointLog] [info] starting optimizer
+[2022-08-09 10:25:04.376] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2022-08-09 10:25:04.385] [jointLog] [info] iteration = 0 | max rel diff. = 11188.9
+[2022-08-09 10:25:05.281] [jointLog] [info] iteration = 100 | max rel diff. = 12.7599
+[2022-08-09 10:25:06.201] [jointLog] [info] iteration = 200 | max rel diff. = 0.800693
+[2022-08-09 10:25:07.166] [jointLog] [info] iteration = 300 | max rel diff. = 1.97757
+[2022-08-09 10:25:08.118] [jointLog] [info] iteration = 400 | max rel diff. = 1.37197
+[2022-08-09 10:25:09.037] [jointLog] [info] iteration = 500 | max rel diff. = 0.0536175
+[2022-08-09 10:25:09.948] [jointLog] [info] iteration = 600 | max rel diff. = 1.75828
+[2022-08-09 10:25:10.854] [jointLog] [info] iteration = 700 | max rel diff. = 0.0541328
+[2022-08-09 10:25:11.778] [jointLog] [info] iteration = 800 | max rel diff. = 0.0955985
+[2022-08-09 10:25:12.705] [jointLog] [info] iteration = 900 | max rel diff. = 0.125791
+[2022-08-09 10:25:13.442] [jointLog] [info] iteration = 981 | max rel diff. = 0.00539034
+[2022-08-09 10:25:13.456] [jointLog] [info] finished optimizer
+[2022-08-09 10:25:13.456] [jointLog] [info] writing output
+[2022-08-09 10:25:14.418] [jointLog] [info] Computing gene-level abundance estimates
+[2022-08-09 10:25:35.443] [jointLog] [info] There were 110371 transcripts mapping to 46072 genes
+[2022-08-09 10:25:35.443] [jointLog] [info] NOTE: We recommend using tximport (https://bioconductor.org/packages/release/bioc/html/tximport.html) for aggregating transcript-level salmon abundance estimates to the gene level.  It is more versatile, exposes more features, and allows considering multi-sample information during aggregation.
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000195858] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000178815] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000177646] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000179262] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000179166] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000192089] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.464] [jointLog] [warning] couldn't find transcript named [ENSMUST00000178811] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.472] [jointLog] [warning] couldn't find transcript named [ENSMUST00000196221] in transcript <-> gene map; returning transcript as it's own gene
+[2022-08-09 10:25:35.593] [jointLog] [info] Aggregating expressions to gene level
+[2022-08-09 10:25:35.687] [jointLog] [info] done
