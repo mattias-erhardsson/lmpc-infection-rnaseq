@@ -2,22 +2,22 @@
 set.seed(1337)
 
 ################################## Install and load renv 1.0.0
-library("devtools")
+#library("devtools")
 
-renv::clean()
-renv::deactivate()
-unloadNamespace("renv")
-root <- renv::paths$root()
-unlink(root, recursive = TRUE)
-utils::remove.packages("renv")
+#renv::clean()
+#renv::deactivate()
+#unloadNamespace("renv")
+#root <- renv::paths$root()
+#unlink(root, recursive = TRUE)
+#utils::remove.packages("renv")
 
-devtools::install_version("renv", version = "1.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
+#devtools::install_version("renv", version = "1.0.0", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
 
-library("renv")
+#library("renv")
 
-renv::activate()
+#renv::activate()
 
-renv::restore()
+#renv::restore()
 
 #renv::install("tidyverse@2.0.0")
 #Y
@@ -91,6 +91,7 @@ lapply(
     "EnsDb.Mmusculus.v79", # ensdb package for mouse
     "ensembldb", # For getting gene lengths necessary for TPM calculation
     "SetRank", # For the SetRank GSEA
+    "parallel", # For parallelisation
     "biomaRt", # For annotation and GO gene sets
     "org.Mm.eg.db", # For GO term annotation, might be used instead of biomaRt
     "reactome.db", # For annotationdbi of reactome
@@ -1550,7 +1551,7 @@ referenceSetTest <- genes_for_annotation %>%
   deframe()
 # Create set collection object for SetRank
 parallel::detectCores(all.tests = FALSE, logical = TRUE)
-options(mc.cores = 1) # Adapt to the number of cores you use
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))) # Adapt to the number of cores you use
 collectionTest <- buildSetCollection(annotationTableTest,
                                      referenceSet = referenceSetTest,
                                      maxSetSize = 100 # Default is 500
@@ -1602,7 +1603,7 @@ referenceSet <- genes_for_annotation %>%
 
 ## Create set collection object for SetRank
 parallel::detectCores(all.tests = FALSE, logical = TRUE)
-options(mc.cores = 20) # Adapt to the number of cores you use
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))) # Adapt to the number of cores you use
 collection <- buildSetCollection(annotationTable,
                                  referenceSet = referenceSet,
                                  maxSetSize = 500 # Default is 500
