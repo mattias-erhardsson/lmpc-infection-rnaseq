@@ -10,7 +10,8 @@ lapply(
     "devtools", # If new packages of a specific version needs to be installed
     "renv", # For project management
     "BiocManager", # For project management
-    "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues
+    "httpgd", # For better figures in interactive mode
+    "plyr", #Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "tidyverse", # Data wrangling, processing and presentation. Does not seem to work with renv, so individual packages need to be loaded in this environment
     "vroom", # Faster data wrangling
     "readr", # Data wrangling
@@ -1521,7 +1522,7 @@ referenceSet <- genes_for_annotation %>%
   deframe()
 
 ## Create set collection object for SetRank
-print("Available cores:",
+paste("Available cores:",
 parallel::detectCores(all.tests = FALSE, logical = TRUE))
 options(mc.cores = 10) # Adapt to the number of cores you use. I have had problems running on 20 cores.
 collection <- buildSetCollection(annotationTable,
