@@ -1459,55 +1459,55 @@ annotationTable <- rbind(
 ########################################## Small scale test of SetRank, later commented out
 # Create background reference gene set for SetRank
 # The background will be all genes with at least 1 count in 1 sample
-annotationTableTest <- annotationTable %>%
-  dplyr::filter(dbName == "KEGG")
-referenceSetTest <- genes_for_annotation %>%
-  dplyr::filter(Gene_Detected == TRUE) %>%
-  dplyr::filter(GeneSymbol %in% annotationTableTest$geneID) %>%
-  #slice_min(order_by = GeneSymbol, n = 1000) %>%
-  dplyr::select(GeneSymbol) %>%
-  distinct() %>%
-  deframe()
+#annotationTableTest <- annotationTable %>%
+#  dplyr::filter(dbName == "KEGG")
+#referenceSetTest <- genes_for_annotation %>%
+#  dplyr::filter(Gene_Detected == TRUE) %>%
+#  dplyr::filter(GeneSymbol %in% annotationTableTest$geneID) %>%
+#  #slice_min(order_by = GeneSymbol, n = 1000) %>%
+#  dplyr::select(GeneSymbol) %>%
+#  distinct() %>%
+#  deframe()
 # Create set collection object for SetRank
-parallel::detectCores(all.tests = FALSE, logical = TRUE)
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))) # Adapt to the number of cores you use
-collectionTest <- buildSetCollection(annotationTableTest,
-                                     referenceSet = referenceSetTest,
-                                     maxSetSize = 100 # Default is 500
-)
+#parallel::detectCores(all.tests = FALSE, logical = TRUE)
+#options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))) # Adapt to the number of cores you use
+#collectionTest <- buildSetCollection(annotationTableTest,
+#                                     referenceSet = referenceSetTest,
+#                                     maxSetSize = 100 # Default is 500
+#)
 # Use SetRank in ranked mode
 # The genes can be ranked in many different ways
 # In this case, I use adjusted p-value since this seems to be what is recommended by the paper
 # Gene identifiers ranked by adjusted p-value
-geneIDsTest <- Combined_Results_DF %>%
-  dplyr::filter(GeneSymbol %in% referenceSetTest) %>%
-  dplyr::select(
-    GeneSymbol,
-    adj_pvalue
-  ) %>%
-  distinct() %>%
-  arrange(adj_pvalue) %>%
-  dplyr::select(GeneSymbol) %>%
-  deframe()
+#geneIDsTest <- Combined_Results_DF %>%
+#  dplyr::filter(GeneSymbol %in% referenceSetTest) %>%
+#  dplyr::select(
+#    GeneSymbol,
+#    adj_pvalue
+#  ) %>%
+#  distinct() %>%
+#  arrange(adj_pvalue) %>%
+#  dplyr::select(GeneSymbol) %>%
+#  deframe()
 # And now for the actual SetRank analysis.
 # CAUTION! Might take several days to complete.
-networkTest <- setRankAnalysis(
-  geneIDs = geneIDsTest, # Gene list ranked by adjusted p-value
-  setCollection = collectionTest, # SetRank collection from above
-  use.ranks = TRUE, # Ranked mode
-  setPCutoff = 0.01, # This is default of 0.01
-  fdrCutoff = 0.05
-) # This is default of 0.05
+#networkTest <- setRankAnalysis(
+#  geneIDs = geneIDsTest, # Gene list ranked by adjusted p-value
+#  setCollection = collectionTest, # SetRank collection from above
+#  use.ranks = TRUE, # Ranked mode
+#  setPCutoff = 0.01, # This is default of 0.01
+#  fdrCutoff = 0.05
+#) # This is default of 0.05
 
 # Export results
-exportSingleResult(
-  network = networkTest,
-  selectedGenes = geneIDsTest,
-  collection = collectionTest,
-  networkName = "SetRank_NetworkTest",
-  IDConverter = NULL,
-  outputPath = "./R_output_files/Setrank_results"
-)
+#exportSingleResult(
+#  network = networkTest,
+#  selectedGenes = geneIDsTest,
+#  collection = collectionTest,
+#  networkName = "SetRank_NetworkTest",
+#  IDConverter = NULL,
+#  outputPath = "./R_output_files/Setrank_results"
+#)
 
 
 ########################################## GSEA with SetRank
@@ -1521,8 +1521,9 @@ referenceSet <- genes_for_annotation %>%
   deframe()
 
 ## Create set collection object for SetRank
-parallel::detectCores(all.tests = FALSE, logical = TRUE)
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))) # Adapt to the number of cores you use
+print("Available cores:",
+parallel::detectCores(all.tests = FALSE, logical = TRUE))
+options(mc.cores = 10) # Adapt to the number of cores you use. I have had problems running on 20 cores.
 collection <- buildSetCollection(annotationTable,
                                  referenceSet = referenceSet,
                                  maxSetSize = 500 # Default is 500
