@@ -32,11 +32,14 @@ lapply(
     "reactome.db", # For annotationdbi of reactome
     "GO.db", # For GO term annotation, might be used instead of biomaRt
     "KEGGREST", # For KEGG
-    "styler" # R studio addin for interactively adhere to the tidyverse style guide
+    "styler", # R studio addin for interactively adhere to the tidyverse style guide
+    "RCy3"
     ),
   library,
   character.only = TRUE
 )
+
+#BiocManager::install("RCy3", version = "3.16")
 
 #devtools::install_version("rmarkdown", "2.21")
 
@@ -1682,3 +1685,6 @@ Clusters %>%
   inner_join(Clusters, by = "GeneSymbol") %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Cluster, Significant_gene_sets) %>%
   distinct()
+
+########################################## Combine gene set and clustering annotations for all significant genes
+# A sort of master results file with all significant gene sets, all significant genes, as well as clustering info.
