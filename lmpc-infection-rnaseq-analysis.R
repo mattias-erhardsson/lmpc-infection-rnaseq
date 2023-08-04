@@ -33,7 +33,7 @@ lapply(
     "GO.db", # For GO term annotation, might be used instead of biomaRt
     "KEGGREST", # For KEGG
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
-    "RCy3"
+    "RCy3" # For cytoscape programmatic analysis
     ),
   library,
   character.only = TRUE
