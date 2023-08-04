@@ -909,6 +909,35 @@ TPM_ggplot_df_annotated %>%
   distinct() %>%
   plyr::count("Cell_Type")
 
+########################################## Comparison of TPM of significant genes
+## Complementary analysis of a more absolute meassure rather relative gene expression
+TPM_sig_genes <- TPM_df %>%
+dplyr::select(GeneSymbol, User_ID, TPM, condition) %>%
+dplyr::group_by(GeneSymbol, condition) %>%
+dplyr::mutate(Mean_TPM = mean(TPM)) %>%
+dplyr::mutate(condition = factor(condition, levels = c("Non_Infected", "Infected"))) %>%
+dplyr::ungroup() %>% 
+dplyr::inner_join(sig_genes, by = "GeneSymbol") %>%
+dplyr::filter(adj_pvalue < 0.05)
+
+TPM_sig_genes_plot <- ggplot(TPM_sig_genes, aes(x = condition, y = Mean_TPM, group = GeneSymbol)) +
+geom_line() +
+geom_label(aes(label = GeneSymbol)); print(TPM_sig_genes_plot)
+
+ggsave(
+  filename = "./R_output_files/Figures/TPM_sig_genes_plot.svg",
+  plot = TPM_sig_genes_plot,
+  width = 2250,
+  height = 2625,
+  units = "px"
+)
+
+# Mean TPM df for downstream
+Mean_condition_TPM <- TPM_sig_genes %>%
+dplyr::select(GeneSymbol, Mean_TPM, condition) %>%
+distinct() %>%
+pivot_wider(names_from = condition, values_from = Mean_TPM)
+
 ##################################################### Next comes several sections for annotating the genes with gene sets. It is very messy, to whoever is re-running this script I'm so sorry about this
 ##################################################### Annotate GO gene sets with bioMart, might be better than annotationdbi
 ## Annotate with GO.db and Biomart and compare
@@ -1617,8 +1646,9 @@ Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
   dplyr::rename("Cluster" = `__mclCluster`) %>%
   dplyr::select(GeneSymbol, Cluster)
 
+# Join with gene sets
 Clusters_All <- annotationTable %>%
-  full_join(Significant_Gene_Sets,
+  full_join(Gene_Sets,
             join_by(termID == name),
             suffix = c("_Gene", "_GeneSet")
   ) %>%
@@ -1628,7 +1658,7 @@ Clusters_All <- annotationTable %>%
   full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster)
 
-Clusters <- annotationTable %>%
+Clusters_Sig <- annotationTable %>%
   full_join(Significant_Gene_Sets,
             join_by(termID == name),
             suffix = c("_Gene", "_GeneSet")
@@ -1637,18 +1667,18 @@ Clusters <- annotationTable %>%
   dplyr::rename("GeneSymbol" = geneID) %>%
   full_join(all_detected_genes, by = "GeneSymbol") %>%
   full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, Cluster) %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster) %>%
   dplyr::filter(adj_pvalue < 0.05)
 
 # Which gene sets are present in clusters 1-5, and are they down or up-regulated?
 write_xlsx(
-  x = Clusters %>%
+  x = Clusters_Sig %>%
     dplyr::filter(Cluster %in% 1:5) %>%
     dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
     distinct() %>%
     group_by(Cluster) %>%
     dplyr::summarise("Mean_log2FoldChange" = mean(log2FoldChange)) %>%
-    full_join(Clusters, by = "Cluster") %>%
+    full_join(Clusters_Sig, by = "Cluster") %>%
     dplyr::select(Cluster, termName, Mean_log2FoldChange) %>%
     distinct() %>%
     drop_na() %>%
@@ -1659,7 +1689,7 @@ write_xlsx(
 
 # I noticed that cluster 1 contains almost all of the most up-regulated genes
 # How many up-regulated genes with log2FoldChange >2 belong to cluster 1 as compared to the other gene sets?
-Clusters %>%
+Clusters_Sig %>%
   dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
   distinct() %>%
   dplyr::filter(log2FoldChange > 2) %>%
@@ -1668,14 +1698,14 @@ Clusters %>%
 
 # Export annotated clusters
 write_xlsx(
-  x = Clusters %>%
+  x = Clusters_Sig %>%
     dplyr::select(Cluster, GeneSymbol, log2FoldChange, adj_pvalue) %>%
     distinct(),
   path = "./R_output_files/Tables/Significant_Genes_Cluster_Annotation.xlsx"
 )
 
 # Which clusters do the top differentially expressed genes belong to?
-Clusters %>%
+Clusters_Sig %>%
   group_by(GeneSymbol) %>%
   summarize(Significant_gene_sets = paste(termName, collapse = "\n")) %>%
   inner_join(sig_genes, by = "GeneSymbol") %>%
@@ -1688,3 +1718,32 @@ Clusters %>%
 
 ########################################## Combine gene set and clustering annotations for all significant genes
 # A sort of master results file with all significant gene sets, all significant genes, as well as clustering info.
+Sig_Sets_Clusters_Genes_TPM <- Clusters_Sig %>%
+dplyr::select(Cluster,GeneSymbol,log2FoldChange) %>%
+dplyr::distinct()  %>% 
+dplyr::group_by(Cluster) %>%
+dplyr::mutate("Mean_Cluster_log2FoldChange" = mean(log2FoldChange)) %>%
+dplyr::ungroup() %>%
+dplyr::inner_join(Clusters_Sig, by = c("Cluster", "GeneSymbol", "log2FoldChange")) %>%
+    dplyr::select(Cluster,
+    Mean_Cluster_log2FoldChange,
+    GeneSymbol, 
+    log2FoldChange, 
+    adj_pvalue,
+    termID,
+    termName,
+    dbName,
+    pSetRank) %>%
+    distinct() %>%
+dplyr::full_join(Mean_condition_TPM, by = "GeneSymbol")
+
+# Double checking all significant genes are with us
+# Same number of entries?
+nrow(sig_genes %>% distinct) == nrow(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% distinct)
+# Which entries do not match?
+sig_genes[!deframe(sig_genes %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol)) == deframe(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol) %>% distinct()),]
+
+write_xlsx(
+  x = Sig_Sets_Clusters_Genes_TPM,
+  path = "./R_output_files/Tables/summarised-results-of-significant-genes-sets-clusters.xlsx"
+)
