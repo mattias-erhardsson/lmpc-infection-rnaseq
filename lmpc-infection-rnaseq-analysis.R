@@ -32,12 +32,13 @@ lapply(
     "reactome.db", # For annotationdbi of reactome
     "GO.db", # For GO term annotation, might be used instead of biomaRt
     "KEGGREST", # For KEGG
-    "styler", # R studio addin for interactively adhere to the tidyverse style guide
-    "grateful" # For citing packages used
-  ),
+    "styler" # R studio addin for interactively adhere to the tidyverse style guide
+    ),
   library,
   character.only = TRUE
 )
+
+#devtools::install_version("rmarkdown", "2.21")
 
 sessionInfo()
 
@@ -1210,7 +1211,7 @@ Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL <- rbind(
 
 ## Now GO terms with annotationdbi
 keytypes(org.Mm.eg.db)
-help("GO")
+#help("GO")
 head(keys(x = org.Mm.eg.db, keytype = "GO"))
 head(keys(x = org.Mm.eg.db, keytype = "GOALL"))
 columns(org.Mm.eg.db)
@@ -1233,7 +1234,7 @@ GOALL_ENTREZID <- AnnotationDbi::select(
 
 # org.Mm.eg.db does not seem to have GO names, have to use GO.db for this
 keytypes(GO.db)
-help("TERM")
+#help("TERM")
 GO_Annotation <- AnnotationDbi::select(
   x = GO.db,
   keys = Annotationdbi_GOALL,
@@ -1524,7 +1525,7 @@ referenceSet <- genes_for_annotation %>%
 ## Create set collection object for SetRank
 paste("Available cores:",
 parallel::detectCores(all.tests = FALSE, logical = TRUE))
-options(mc.cores = 10) # Adapt to the number of cores you use. I have had problems running on 20 cores.
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))- 2) # Adapt to the number of cores you use. I have had problems running on 20 cores.
 collection <- buildSetCollection(annotationTable,
                                  referenceSet = referenceSet,
                                  maxSetSize = 500 # Default is 500
@@ -1567,7 +1568,7 @@ exportSingleResult(
 )
 
 ########################################## Investigate exported gene sets
-Gene_Sets <- read_tsv(file = "./R_output_files/Setrank_results/network_pathways.txt",
+Gene_Sets <- read_tsv(file = "./R_output_files/Setrank_results/SetRank_Network_pathways.txt",
                       col_types = c("cccidddd"))
 
 Significant_Gene_Sets <- Gene_Sets %>%
@@ -1681,6 +1682,3 @@ Clusters %>%
   inner_join(Clusters, by = "GeneSymbol") %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Cluster, Significant_gene_sets) %>%
   distinct()
-
-################################## Cite packages used with grateful
-cite_packages(out.format = "docx", out.dir = "./R_output_files/Grateful")

@@ -1,0 +1,25 @@
+---
+title: "`grateful` citation report"
+bibliography: grateful-refs.bib
+#csl: null.csl
+---
+
+## R packages used
+
+|Package              |Version |Citation     |
+|:--------------------|:-------|:------------|
+|AnnotationDbi        |1.60.2  |@Annotat.... |
+|base                 |4.2.1   |@base        |
+|BiocGenerics         |0.44.0  |@BiocGen.... |
+|DESeq2               |1.38.3  |@DESeq2      |
+|plyr                 |1.8.8   |@plyr        |
+|rmarkdown            |2.21    |@rmarkdo.... |
+|SummarizedExperiment |1.28.0  |@Summari.... |
+|tidyverse            |2.0.0   |@tidyverse   |
+
+**You can paste this paragraph directly in your report:**
+
+We used R version 4.2.1 [@base] and the following R packages: AnnotationDbi v. 1.60.2 [@AnnotationDbi], BiocGenerics v. 0.44.0 [@BiocGenerics], DESeq2 v. 1.38.3 [@DESeq2], plyr v. 1.8.8 [@plyr], rmarkdown v. 2.21 [@rmarkdown2018; @rmarkdown2020; @rmarkdown2023], SummarizedExperiment v. 1.28.0 [@SummarizedExperiment], tidyverse v. 2.0.0 [@tidyverse].
+
+## Package citations
+
