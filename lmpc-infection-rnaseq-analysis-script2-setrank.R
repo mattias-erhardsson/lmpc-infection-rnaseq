@@ -76,16 +76,18 @@ annotationTable <- read_tsv(file = "./R_intermediate_files/annotationTable.tsv",
 col_types = c("cccc"))
 
 referenceSet <- read_tsv(file = "./R_intermediate_files/referenceSet.tsv",
-col_types = c("c"))
+col_types = c("c")) %>%
+deframe()
 
-geneIDs <- read_tsv(file = "./R_intermediate_files/geneIDs.tsv",
-col_types = c("c"))
+geneIDs <- as.vector(read_tsv(file = "./R_intermediate_files/geneIDs.tsv",
+col_types = c("c"))) %>%
+deframe()
 
 ########################################## GSEA with SetRank
 ## Create set collection object for SetRank
 paste("Available cores:",
 parallel::detectCores(all.tests = FALSE, logical = TRUE))
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))- 2) # Adapt to the number of cores you use. I have had problems running on 20 cores when I used all cores.
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))- 1) # Adapt to the number of cores you use. I have had problems running on 20 cores when I used all cores.
 collection <- buildSetCollection(annotationTable,
                                  referenceSet = referenceSet,
                                  maxSetSize = 500 # Default is 500
