@@ -321,3 +321,41 @@ write_xlsx(
   x = Sig_Sets_Clusters_Genes_TPM,
   path = "./R_output_files/Tables/summarised-results-of-significant-genes-sets-clusters.xlsx"
 )
+
+
+############################################################## Cytoscape vignette
+cytoscapePing ()
+cytoscapeVersionInfo ()
+nodes <- data.frame(id=c("node 0","node 1","node 2","node 3"),
+           group=c("A","A","B","B"), # categorical strings
+           score=as.integer(c(20,10,15,5)), # integers
+           stringsAsFactors=FALSE)
+edges <- data.frame(source=c("node 0","node 0","node 0","node 2"),
+           target=c("node 1","node 2","node 3","node 3"),
+           interaction=c("inhibits","interacts","activates","interacts"),  # optional
+           weight=c(5.1,3.0,5.2,9.9), # numeric
+           stringsAsFactors=FALSE)
+
+createNetworkFromDataFrames(nodes,edges, title="my first network", collection="DataFrame Example")
+setVisualStyle('Marquee')
+style.name = "myStyle"
+defaults <- list(NODE_SHAPE="diamond",
+                 NODE_SIZE=30,
+                 EDGE_TRANSPARENCY=120,
+                 NODE_LABEL_POSITION="W,E,c,0.00,0.00")
+nodeLabels <- mapVisualProperty('node label','id','p')
+nodeFills <- mapVisualProperty('node fill color','group','d',c("A","B"), c("#FF9900","#66AAAA"))
+arrowShapes <- mapVisualProperty('Edge Target Arrow Shape','interaction','d',c("activates","inhibits","interacts"),c("Arrow","T","None"))
+edgeWidth <- mapVisualProperty('edge width','weight','p')
+
+createVisualStyle(style.name, defaults, list(nodeLabels,nodeFills,arrowShapes,edgeWidth))
+setVisualStyle(style.name)
+#Pro-tip: if you want to set NODE_WIDTH and NODE_HEIGHT independently, you also need to unlock the node dimensions with…
+#lockNodeDimensions(FALSE, style.name)
+
+g = new ('graphNEL', edgemode='directed')
+g = graph::addNode ('A', g)
+g = graph::addNode ('D', g)
+g = graph::addNode ('C', g, edges = list('D'))
+g = graph::addNode ('B', g, edges = list(c('A','D','C')))
+createNetworkFromGraph (g, title='simple network', collection='GraphNEL Example')
