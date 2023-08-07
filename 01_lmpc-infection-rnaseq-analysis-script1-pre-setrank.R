@@ -8,7 +8,7 @@ lapply(
     "renv", # For project management
     "BiocManager", # For project management
     "httpgd", # For better figures in interactive mode
-    "plyr", #Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
+    "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "tidyverse", # Data wrangling, processing and presentation. Does not seem to work with renv, so individual packages need to be loaded in this environment
     "vroom", # Faster data wrangling
     "readr", # Data wrangling
@@ -31,7 +31,7 @@ lapply(
     "KEGGREST", # For KEGG
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3" # For cytoscape programmatic analysis
-    ),
+  ),
   library,
   character.only = TRUE
 )
@@ -96,8 +96,10 @@ if (!dir.exists("./R_output_files/Tables")) {
 # Import sample info file from 00-Reports, annotate sample list and convert potentially problematic characters in column names
 # Change path to where in your directory the file S.Linden_22_01_sample_info.txt is
 # Excluding samples from treatment group as they are outside the scope of this article
-Sample_List <- read_tsv(file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
-                        col_types = c("ccdd")) %>%
+Sample_List <- read_tsv(
+  file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
+  col_types = c("ccdd")
+) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
   dplyr::rename(GreaterThan_Q30 = "≥Q30") %>%
@@ -117,9 +119,11 @@ Sample_List <- read_tsv(file = "./P26010/00-Reports/S.Linden_22_01_sample_info.t
 # Importing data about the LMPC and the RNA purification
 # Excluding samples from treatment group since they are outside the scope of this article
 # Code assumes this data file is in the same directory as the script
-LMPC_RNA_Data <- read_tsv(file = "./R_input_files/LMPC_RNA_Data.txt",
-                          col_types = c("cifdddccidddd")) %>%
-  mutate("Date_harvested" = lubridate::as_date(Date_harvested)) %>% #I couldn't get the date to parse correctly with readr so I change from character to date after reading
+LMPC_RNA_Data <- read_tsv(
+  file = "./R_input_files/LMPC_RNA_Data.txt",
+  col_types = c("cifdddccidddd")
+) %>%
+  mutate("Date_harvested" = lubridate::as_date(Date_harvested)) %>% # I couldn't get the date to parse correctly with readr so I change from character to date after reading
   mutate("Date_sectioned" = lubridate::as_date(Date_sectioned)) %>%
   dplyr::filter(!User_ID %in% c(
     "H9_11",
@@ -257,7 +261,7 @@ txi_dds <- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
 Counts_All <- data.frame(BiocGenerics::counts(txi_dds)) %>%
   rownames_to_column("GENEID") %>%
   inner_join(Gene_Symbols, # With full join it will be a complete match with tx2gene, but there will be NA values
-             by = "GENEID"
+    by = "GENEID"
   ) %>%
   replace(is.na(.), 0) # Replace NA values with 0
 
@@ -287,16 +291,16 @@ Counts_All_NoDuplicatedSymbol <- Counts_All %>%
   ) %>%
   group_by(GeneSymbol, names) %>%
   dplyr::summarise("Counts" = sum(Counts)) %>%
-  #ddply(.(GeneSymbol, names), summarise, "Counts" = sum(Counts)) %>%
+  # ddply(.(GeneSymbol, names), summarise, "Counts" = sum(Counts)) %>%
   pivot_wider(
     values_from = Counts,
     names_from = names
   ) %>%
   inner_join(Gene_Symbols,
-             by = "GeneSymbol",
-             multiple = "first" # this takes the first of the multiple matches. Might not work depnding on package verison
+    by = "GeneSymbol",
+    multiple = "first" # this takes the first of the multiple matches. Might not work depnding on package verison
   ) %>%
-  distinct(GeneSymbol, .keep_all = TRUE) #If the mutiple = "first" doesn't work with your R version this should work
+  distinct(GeneSymbol, .keep_all = TRUE) # If the mutiple = "first" doesn't work with your R version this should work
 # Double check duplicates were removed
 Counts_All_NoDuplicatedSymbol %>%
   dplyr::select(GENEID, GeneSymbol) %>%
@@ -319,11 +323,11 @@ Tidy_Counts_DetectedGenes_NoDuplicatedSymbol <- Tidy_Counts_All_NoDuplicatedSymb
   mutate("Gene_Detected" = ifelse(Summed_Counts > 0, TRUE, FALSE)) %>%
   dplyr::select(-Summed_Counts) %>%
   inner_join(Tidy_Counts_All_NoDuplicatedSymbol,
-             by = "GENEID",
-             multiple = "all"
+    by = "GENEID",
+    multiple = "all"
   ) %>%
   inner_join(Sample_List %>% dplyr::select(names, User_ID),
-             by = "names"
+    by = "names"
   ) %>%
   dplyr::select(-names)
 
@@ -331,22 +335,22 @@ Tidy_Counts_DetectedGenes_NoDuplicatedSymbol <- Tidy_Counts_All_NoDuplicatedSymb
 # Now matrix to put back into deseq2
 # Since it is easier to understand gene symbols and we now have unique symbols, we will use that primarily
 Counts_Matrix_Unique_Symbols <- as.matrix(Tidy_Counts_DetectedGenes_NoDuplicatedSymbol %>%
-                                            pivot_wider(
-                                              values_from = Counts,
-                                              names_from = User_ID
-                                            ) %>%
-                                            dplyr::select(-GENEID, -Gene_Detected) %>%
-                                            column_to_rownames("GeneSymbol"))
+  pivot_wider(
+    values_from = Counts,
+    names_from = User_ID
+  ) %>%
+  dplyr::select(-GENEID, -Gene_Detected) %>%
+  column_to_rownames("GeneSymbol"))
 
 mtx_dds <- DESeqDataSetFromMatrix(
   countData = Counts_Matrix_Unique_Symbols,
   colData = Sample_List %>%
     dplyr::select(User_ID, condition) %>%
     mutate(condition = factor(condition,
-                              levels = c(
-                                "Non_Infected",
-                                "Infected"
-                              )
+      levels = c(
+        "Non_Infected",
+        "Infected"
+      )
     )) %>%
     column_to_rownames("User_ID"),
   design = ~condition
@@ -403,8 +407,8 @@ ggsave(
 summary_pca <- summary(pca)
 PC_Variance <- ggplot(
   enframe(summary_pca$importance[2, ],
-          name = "PC",
-          value = "Proportion_of_variance_captured"
+    name = "PC",
+    value = "Proportion_of_variance_captured"
   ) %>%
     mutate(PC = str_replace(PC, "(^[:alpha:]{2})(\\d)$", "\\10\\2")),
   aes(
@@ -433,7 +437,7 @@ custom.config$random_state <- 1337
 ## Create umap object from wide counts matrix
 
 UMAP_Output <- umap(UMAP_Input,
-                    n_neighbors = 8
+  n_neighbors = 8
 ) # Highest value possible with 9 samples. Default is 15.
 
 UMAP_mtx <- UMAP_Output[["layout"]]
@@ -443,7 +447,7 @@ colnames(UMAP_mtx) <- c("UMAP_1", "UMAP_2")
 UMAP_df <- as.data.frame(UMAP_mtx) %>%
   rownames_to_column("User_ID") %>%
   inner_join(Sample_List,
-             by = "User_ID"
+    by = "User_ID"
   )
 
 ## Visualize umap
@@ -473,8 +477,8 @@ ggsave(
 ################################## Differential Gene Expression (DGE)
 ## Extract DESeq2 results
 res_df <- DESeq2::results(dds,
-                          alpha = 0.05,
-                          contrast = c("condition", "Infected", "Non_Infected")
+  alpha = 0.05,
+  contrast = c("condition", "Infected", "Non_Infected")
 )
 summary(res_df)
 ## Independent Hypothesis Weighting http://bioconductor.org/packages/release/bioc/html/IHW.html
@@ -484,8 +488,8 @@ deRes_res_df <- as.data.frame(res_df)
 
 # IHW adjustment of pvalues
 ihwRes_res_df <- ihw(pvalue ~ baseMean,
-                     data = deRes_res_df,
-                     alpha = 0.05
+  data = deRes_res_df,
+  alpha = 0.05
 )
 
 # Number of significant genes
@@ -499,7 +503,7 @@ paste(
 
 # Dataframe with IHW adjusted p values, fold changes, counts and rlog
 Combined_Results_DF <- as.data.frame(ihwRes_res_df,
-                                     row.names = rownames(deRes_res_df)
+  row.names = rownames(deRes_res_df)
 ) %>%
   rownames_to_column("GeneSymbol") %>%
   mutate(Comparison = "Infected_vs_Non_Infected") %>%
@@ -510,8 +514,8 @@ Combined_Results_DF <- as.data.frame(ihwRes_res_df,
   ) %>%
   dplyr::select(GeneSymbol, adj_pvalue, pvalue, log2FoldChange, Comparison) %>%
   inner_join(Tidy_Counts_DetectedGenes_NoDuplicatedSymbol,
-             by = "GeneSymbol",
-             relationship = "many-to-many"
+    by = "GeneSymbol",
+    relationship = "many-to-many"
   ) %>%
   inner_join(
     as.data.frame(assay(rlog(dds, blind = TRUE))) %>%
@@ -698,7 +702,7 @@ ensdb_gene_counts <- enframe(
   value = "ensembldb_ID"
 ) %>%
   inner_join(Tidy_Counts_DetectedGenes_NoDuplicatedSymbol,
-             by = "GeneSymbol"
+    by = "GeneSymbol"
   ) %>%
   inner_join(
     enframe(
@@ -719,7 +723,7 @@ ensdb_gene_counts_transcripts <- enframe(
   value = "Transcript_Length"
 ) %>%
   inner_join(ensdb_gene_counts,
-             by = "ensembldb_TXID"
+    by = "ensembldb_TXID"
   ) %>%
   mutate(Transcript_Kbp = Transcript_Length / 1000) %>%
   mutate(RPK = Counts / Transcript_Kbp)
@@ -729,21 +733,25 @@ TPM_df <- ensdb_gene_counts_transcripts %>%
   group_by(User_ID) %>%
   dplyr::summarise(TPM_Scaling_Factor = sum(RPK) / 1e6) %>%
   inner_join(ensdb_gene_counts_transcripts,
-             by = "User_ID"
+    by = "User_ID"
   ) %>%
   mutate(TPM = RPK / TPM_Scaling_Factor) %>%
   inner_join(Sample_List,
-             by = "User_ID"
+    by = "User_ID"
   )
 
 # exporting TPM_df intermediate file
-write_tsv(x = TPM_df,
-file = "./R_intermediate_files/TPM_df.tsv")
+write_tsv(
+  x = TPM_df,
+  file = "./R_intermediate_files/TPM_df.tsv"
+)
 
 ########################################## Gene markers for cell types to visualize what cells might be present
 ## PanglaoDB marker genes download
-PanglaoDB_Marker_Genes <- read_tsv(file = "./R_input_files/PanglaoDB_markers_27_Mar_2020.tsv",
-                                   col_types = c("ccccdcciccdddd")) %>%
+PanglaoDB_Marker_Genes <- read_tsv(
+  file = "./R_input_files/PanglaoDB_markers_27_Mar_2020.tsv",
+  col_types = c("ccccdcciccdddd")
+) %>%
   dplyr::rename("GeneSymbol" = `official gene symbol`) %>%
   dplyr::rename("Cell_Type" = `cell type`) %>%
   dplyr::mutate(GeneSymbol = str_to_title(GeneSymbol))
@@ -755,8 +763,10 @@ Organ_Filter <- c(
 )
 
 ## Manually adding genes based on Bockerstett et al 2020 https://gut.bmj.com/content/69/6/1027.long
-Bockerstett_Gene_List <- read_tsv(file = "./R_input_files/Bockerstett et all 2020 Gut supplemental material marker gene list.tsv",
-                                  col_types = c("cic")) %>%
+Bockerstett_Gene_List <- read_tsv(
+  file = "./R_input_files/Bockerstett et all 2020 Gut supplemental material marker gene list.tsv",
+  col_types = c("cic")
+) %>%
   dplyr::select(GeneSymbol, Cell_Type) %>%
   mutate("organ" = "GI tract") %>%
   distinct()
@@ -765,7 +775,7 @@ Bockerstett_Gene_List <- read_tsv(file = "./R_input_files/Bockerstett et all 202
 Gene_Filter <- PanglaoDB_Marker_Genes %>%
   dplyr::filter(organ %in% Organ_Filter) %>%
   full_join(Bockerstett_Gene_List,
-            by = c("GeneSymbol", "Cell_Type", "organ")
+    by = c("GeneSymbol", "Cell_Type", "organ")
   ) %>%
   dplyr::count(GeneSymbol) %>%
   dplyr::filter(n != 1) %>%
@@ -801,7 +811,7 @@ Cell_Types_Filter <- c(
 ## Filter marker genes which show up in multiple cell types in our analysis in order to increase specificity
 Gene_Filter <- PanglaoDB_Marker_Genes %>%
   full_join(Bockerstett_Gene_List,
-            by = c("GeneSymbol", "Cell_Type", "organ")
+    by = c("GeneSymbol", "Cell_Type", "organ")
   ) %>%
   dplyr::filter(GeneSymbol != "Muc6") %>% # Manual removal from gene filter. Will instead be removed from metaplastic cells to avoid overlap
   dplyr::filter(Cell_Type %in% Cell_Types_Filter) %>%
@@ -816,14 +826,14 @@ TPM_ggplot_df <- PanglaoDB_Marker_Genes %>%
   dplyr::filter(!specificity_mouse > 0) %>% # Another way to make gene markers more specific
   dplyr::filter(species == "Mm Hs" | species == "Mm") %>% # We only want marker genes relevant for mice
   full_join(Bockerstett_Gene_List,
-            by = c("GeneSymbol", "Cell_Type", "organ")
+    by = c("GeneSymbol", "Cell_Type", "organ")
   ) %>%
   dplyr::filter(!(GeneSymbol == "Muc6" & Cell_Type == "Metaplastic cells")) %>% # Filtering out Muc6 for metaplastic cells to avoid overlap with mucous neck cells
   dplyr::filter(!GeneSymbol %in% Gene_Filter) %>%
   dplyr::filter(Cell_Type %in% Cell_Types_Filter) %>%
   inner_join(TPM_df,
-             by = "GeneSymbol",
-             relationship = "many-to-many"
+    by = "GeneSymbol",
+    relationship = "many-to-many"
   ) %>%
   dplyr::select(Cell_Type, GeneSymbol, TPM, names, condition, organ, `canonical marker`, specificity_mouse) %>%
   distinct()
@@ -908,17 +918,18 @@ TPM_ggplot_df_annotated %>%
 ########################################## Comparison of TPM of significant genes
 ## Complementary analysis of a more absolute meassure rather relative gene expression
 TPM_sig_genes <- TPM_df %>%
-dplyr::select(GeneSymbol, User_ID, TPM, condition) %>%
-dplyr::group_by(GeneSymbol, condition) %>%
-dplyr::mutate(Mean_TPM = mean(TPM)) %>%
-dplyr::mutate(condition = factor(condition, levels = c("Non_Infected", "Infected"))) %>%
-dplyr::ungroup() %>% 
-dplyr::inner_join(sig_genes, by = "GeneSymbol") %>%
-dplyr::filter(adj_pvalue < 0.05)
+  dplyr::select(GeneSymbol, User_ID, TPM, condition) %>%
+  dplyr::group_by(GeneSymbol, condition) %>%
+  dplyr::mutate(Mean_TPM = mean(TPM)) %>%
+  dplyr::mutate(condition = factor(condition, levels = c("Non_Infected", "Infected"))) %>%
+  dplyr::ungroup() %>%
+  dplyr::inner_join(sig_genes, by = "GeneSymbol") %>%
+  dplyr::filter(adj_pvalue < 0.05)
 
 TPM_sig_genes_plot <- ggplot(TPM_sig_genes, aes(x = condition, y = Mean_TPM, group = GeneSymbol)) +
-geom_line() +
-geom_label(aes(label = GeneSymbol)); print(TPM_sig_genes_plot)
+  geom_line() +
+  geom_label(aes(label = GeneSymbol))
+print(TPM_sig_genes_plot)
 
 ggsave(
   filename = "./R_output_files/Figures/TPM_sig_genes_plot.svg",
@@ -930,13 +941,15 @@ ggsave(
 
 # Mean TPM df for downstream
 Mean_condition_TPM_sig_genes <- TPM_sig_genes %>%
-dplyr::select(GeneSymbol, Mean_TPM, condition) %>%
-distinct() %>%
-pivot_wider(names_from = condition, values_from = Mean_TPM)
+  dplyr::select(GeneSymbol, Mean_TPM, condition) %>%
+  distinct() %>%
+  pivot_wider(names_from = condition, values_from = Mean_TPM)
 
 # Exporting mean TPM intermediary file
-write_tsv(x = Mean_condition_TPM_sig_genes,
-file = "./R_intermediate_files/Mean_condition_TPM_sig_genes.tsv")
+write_tsv(
+  x = Mean_condition_TPM_sig_genes,
+  file = "./R_intermediate_files/Mean_condition_TPM_sig_genes.tsv"
+)
 
 ##################################################### Next comes several sections for annotating the genes with gene sets. It is very messy, to whoever is re-running this script I'm so sorry about this
 ##################################################### Annotate GO gene sets with bioMart, might be better than annotationdbi
@@ -975,7 +988,7 @@ Matching_ENSEMBL_Symbol <- genes_for_annotation %>%
   mutate("ensembl_gene_id" = GENEID) %>%
   mutate("external_gene_name" = GeneSymbol) %>%
   inner_join(Legend_bioMart,
-             by = c("ensembl_gene_id", "external_gene_name")
+    by = c("ensembl_gene_id", "external_gene_name")
   ) %>%
   mutate(biomaRt_compatability = "ENSEMBL_and_symbol_matching") %>%
   relocate(c(
@@ -992,7 +1005,7 @@ Matching_ENSEMBL_Only <- genes_for_annotation %>%
   dplyr::filter(!GENEID %in% Matching_ENSEMBL_Symbol$GENEID) %>%
   mutate("ensembl_gene_id" = GENEID) %>%
   inner_join(Legend_bioMart,
-             by = c("ensembl_gene_id")
+    by = c("ensembl_gene_id")
   ) %>%
   mutate(biomaRt_compatability = "ENSEMBL_only_matching") %>%
   relocate(c(
@@ -1010,8 +1023,8 @@ Matching_Symbol_Only <- genes_for_annotation %>%
   dplyr::filter(!GENEID %in% Matching_ENSEMBL_Only$GENEID) %>%
   mutate("external_gene_name" = GeneSymbol) %>%
   inner_join(Legend_bioMart,
-             by = c("external_gene_name"),
-             multiple = "first"
+    by = c("external_gene_name"),
+    multiple = "first"
   ) %>% # How I handled multiple matches
   mutate(biomaRt_compatability = "Symbol_only_matching") %>%
   relocate(c(
@@ -1080,16 +1093,16 @@ GO2 <- getBM(
 
 GO <- GO1 %>%
   inner_join(GO2,
-             by = "go_id",
-             multiple = "all"
+    by = "go_id",
+    multiple = "all"
   ) %>%
   dplyr::filter(go_id != "")
 
 GO_Entrez <- Entrez %>%
   mutate(entrezgene_id = as.character(entrezgene_id)) %>%
   full_join(GO,
-            by = "ensembl_gene_id",
-            relationship = "many-to-many"
+    by = "ensembl_gene_id",
+    relationship = "many-to-many"
   ) %>%
   dplyr::mutate(entrezgene_id = na_if(entrezgene_id, "")) %>%
   dplyr::mutate(entrezgene_accession = na_if(entrezgene_accession, "")) %>%
@@ -1098,8 +1111,8 @@ GO_Entrez <- Entrez %>%
 # Annotation with ENSEMBL, symbols, Entrez and GO all in one
 BiomaRt_ENSEMBL_Symbol_Entrez_GO_Annotation <- GeneSymbol_biomaRt_Annotated_ENSEMBL_Symbol %>%
   full_join(GO_Entrez,
-            by = "ensembl_gene_id",
-            relationship = "many-to-many"
+    by = "ensembl_gene_id",
+    relationship = "many-to-many"
   )
 
 # nrow(BiomaRt_ENSEMBL_Symbol_Entrez_GO_Annotation %>% dplyr::select(GENEID) %>% distinct()) == nrow(GeneSymbol_biomaRt_Annotated_ENSEMBL_Symbol %>% dplyr::select(GENEID) %>% distinct())
@@ -1127,11 +1140,11 @@ columns(org.Mm.eg.db)
 Annotationdbi_ENSEMBL <- keys(org.Mm.eg.db, keytype = "ENSEMBL")
 # How many ENSEMBL ids match?
 nrow(genes_for_annotation %>%
-       dplyr::filter(GENEID %in% Annotationdbi_ENSEMBL))
+  dplyr::filter(GENEID %in% Annotationdbi_ENSEMBL))
 # How many symbols match?
 Annotationdbi_SYMBOL <- keys(org.Mm.eg.db, keytype = "SYMBOL")
 nrow(genes_for_annotation %>%
-       dplyr::filter(GeneSymbol %in% Annotationdbi_SYMBOL))
+  dplyr::filter(GeneSymbol %in% Annotationdbi_SYMBOL))
 # Annotationdbi works on an entrez framework.
 # Compare entrez conversion in annotationdbi with biomart
 Annotationdbi_ENTREZ <- keys(x = org.Mm.eg.db, keytype = "ENTREZID")
@@ -1142,10 +1155,10 @@ Annotationdbi_ENTREZ_ENSEMBL_SYMBOL <- AnnotationDbi::select(
   columns = c("ENSEMBL", "SYMBOL")
 )
 nrow(genes_for_annotation %>%
-       dplyr::filter(GeneSymbol %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$SYMBOL))
+  dplyr::filter(GeneSymbol %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$SYMBOL))
 # matches by symbol in annotationdbi
 nrow(genes_for_annotation %>%
-       dplyr::filter(GENEID %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$ENSEMBL))
+  dplyr::filter(GENEID %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$ENSEMBL))
 # matches by ensembl in annotationdbi
 nrow(
   BiomaRt_ENSEMBL_Symbol_Entrez_GO_Annotation %>%
@@ -1160,7 +1173,7 @@ Annotationdbi_Matching_ENSEMBL_Symbol <- genes_for_annotation %>%
   mutate("ENSEMBL" = GENEID) %>%
   mutate("SYMBOL" = GeneSymbol) %>%
   inner_join(Annotationdbi_ENTREZ_ENSEMBL_SYMBOL,
-             by = c("ENSEMBL", "SYMBOL")
+    by = c("ENSEMBL", "SYMBOL")
   ) %>%
   mutate(Annotationdbi_compatability = "ENSEMBL_and_SYMBOL_matching") %>%
   relocate(c(
@@ -1178,8 +1191,8 @@ Annotationdbi_Matching_ENSEMBL_Only <- genes_for_annotation %>%
   dplyr::filter(!GENEID %in% Annotationdbi_Matching_ENSEMBL_Symbol$GENEID) %>%
   mutate("ENSEMBL" = GENEID) %>%
   inner_join(Annotationdbi_ENTREZ_ENSEMBL_SYMBOL,
-             by = c("ENSEMBL"),
-             relationship = "many-to-many"
+    by = c("ENSEMBL"),
+    relationship = "many-to-many"
   ) %>%
   mutate(Annotationdbi_compatability = "ENSEMBL_matching") %>%
   relocate(c(
@@ -1199,8 +1212,8 @@ Annotationdbi_Matching_SYMBOL_Only <- genes_for_annotation %>%
   dplyr::filter(!GENEID %in% Annotationdbi_Matching_ENSEMBL_Only$GENEID) %>%
   mutate("SYMBOL" = GeneSymbol) %>%
   inner_join(Annotationdbi_ENTREZ_ENSEMBL_SYMBOL,
-             by = c("SYMBOL"),
-             relationship = "many-to-many"
+    by = c("SYMBOL"),
+    relationship = "many-to-many"
   ) %>%
   mutate(Annotationdbi_compatability = "SYMBOL_matching") %>%
   relocate(c(
@@ -1243,7 +1256,7 @@ Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL <- rbind(
 
 ## Now GO terms with annotationdbi
 keytypes(org.Mm.eg.db)
-#help("GO")
+# help("GO")
 head(keys(x = org.Mm.eg.db, keytype = "GO"))
 head(keys(x = org.Mm.eg.db, keytype = "GOALL"))
 columns(org.Mm.eg.db)
@@ -1266,7 +1279,7 @@ GOALL_ENTREZID <- AnnotationDbi::select(
 
 # org.Mm.eg.db does not seem to have GO names, have to use GO.db for this
 keytypes(GO.db)
-#help("TERM")
+# help("TERM")
 GO_Annotation <- AnnotationDbi::select(
   x = GO.db,
   keys = Annotationdbi_GOALL,
@@ -1277,11 +1290,11 @@ GO_Annotation <- AnnotationDbi::select(
 
 Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL_GOALL <- Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL %>%
   left_join(GOALL_ENTREZID,
-            by = "ENTREZID",
-            relationship = "many-to-many"
+    by = "ENTREZID",
+    relationship = "many-to-many"
   ) %>%
   left_join(GO_Annotation,
-            by = "GOALL"
+    by = "GOALL"
   )
 
 
@@ -1297,12 +1310,12 @@ BiomaRt_Annotationdbi_GO <- Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL_GOALL 
   mutate(namespace_1003 = str_replace(namespace_1003, "MF", "molecular_function")) %>%
   mutate(namespace_1003 = str_replace(namespace_1003, "CC", "cellular_component")) %>%
   rbind(BiomaRt_ENSEMBL_Symbol_Entrez_GO_Annotation %>%
-          dplyr::select(GENEID, go_id, name_1006, namespace_1003)) %>%
+    dplyr::select(GENEID, go_id, name_1006, namespace_1003)) %>%
   dplyr::filter(!is.na(GENEID)) %>%
   dplyr::filter(!is.na(go_id)) %>%
   distinct() %>%
   full_join(genes_for_annotation,
-            by = "GENEID"
+    by = "GENEID"
   )
 
 ########################################## Annotate reactome gene sets with biomart
@@ -1320,8 +1333,8 @@ Reactome_gene_No_Empty <- Reactome_gene %>%
 
 BiomaRt_Reactome_ENSEMBL_Symbol_Annotation <- GeneSymbol_biomaRt_Annotated_ENSEMBL_Symbol %>%
   full_join(Reactome_gene_No_Empty,
-            by = "ensembl_gene_id",
-            relationship = "many-to-many"
+    by = "ensembl_gene_id",
+    relationship = "many-to-many"
   ) %>%
   distinct()
 
@@ -1336,11 +1349,11 @@ keytypes(reactome.db)
 Annotationdbi_Reactome_ENTREZ_ENSEMBL_SYMBOL <- as.data.frame(reactomeEXTID2PATHID) %>%
   dplyr::rename("ENTREZID" = gene_id) %>%
   dplyr::inner_join(Annotationdbi_ENTREZ_ENSEMBL_SYMBOL,
-                    by = "ENTREZID",
-                    relationship = "many-to-many"
+    by = "ENTREZID",
+    relationship = "many-to-many"
   ) %>%
   dplyr::inner_join(as.data.frame(reactomePATHID2NAME),
-                    by = "DB_ID"
+    by = "DB_ID"
   )
 
 BiomaRt_Reactome_Gene_Pairs <- BiomaRt_Reactome_ENSEMBL_Symbol_Annotation %>%
@@ -1357,16 +1370,16 @@ Annotationdbi_Reactome_Gene_Pairs <- Annotationdbi_Reactome_ENTREZ_ENSEMBL_SYMBO
 
 Both_Reactome_Gene_Pairs <- BiomaRt_Reactome_Gene_Pairs %>%
   full_join(Annotationdbi_Reactome_Gene_Pairs,
-            by = "Reactome_Gene_Pair"
+    by = "Reactome_Gene_Pair"
   )
 
 # Number of reactome mappings present in annotationdbi but not biomart
 nrow(Both_Reactome_Gene_Pairs %>%
-       dplyr::filter(is.na(GENEID)))
+  dplyr::filter(is.na(GENEID)))
 
 # Number of reactome mappings present in biomart but not annotationdbi
 nrow(Both_Reactome_Gene_Pairs %>%
-       dplyr::filter(is.na(ENSEMBL)))
+  dplyr::filter(is.na(ENSEMBL)))
 
 # Reactome pathways in biomart but not annotation dbi
 Both_Reactome_Gene_Pairs %>%
@@ -1388,7 +1401,7 @@ BiomaRt_Annotationdbi_Reactome_ENTREZ_ENSEMBL_SYMBOL <- Annotationdbi_Reactome_E
     "reactome_gene" = DB_ID
   ) %>%
   rbind(BiomaRt_Reactome_ENSEMBL_Symbol_Annotation %>%
-          dplyr::select(GENEID, reactome_gene)) %>%
+    dplyr::select(GENEID, reactome_gene)) %>%
   drop_na() %>%
   distinct() %>%
   full_join(
@@ -1399,7 +1412,7 @@ BiomaRt_Annotationdbi_Reactome_ENTREZ_ENSEMBL_SYMBOL <- Annotationdbi_Reactome_E
     by = "reactome_gene"
   ) %>%
   full_join(genes_for_annotation,
-            by = "GENEID"
+    by = "GENEID"
   ) %>%
   mutate(path_name = ifelse(is.na(path_name), reactome_gene, path_name))
 
@@ -1429,7 +1442,7 @@ KEGG_3 <- KEGG_2 %>%
     "path:"
   )) %>%
   inner_join(KEGG_1,
-             by = "KEGG_ID"
+    by = "KEGG_ID"
   ) %>%
   mutate(ENTREZID = str_remove(
     ENTREZID,
@@ -1438,17 +1451,17 @@ KEGG_3 <- KEGG_2 %>%
 
 # Does our annotationdbi entrez annotation contain all entrez ids for the KEGG pathways?
 nrow(KEGG_2) == nrow(KEGG_2 %>%
-                       mutate(ENTREZID = str_remove(
-                         ENTREZID,
-                         "mmu:"
-                       )) %>%
-                       dplyr::filter(ENTREZID %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$ENTREZID))
+  mutate(ENTREZID = str_remove(
+    ENTREZID,
+    "mmu:"
+  )) %>%
+  dplyr::filter(ENTREZID %in% Annotationdbi_ENTREZ_ENSEMBL_SYMBOL$ENTREZID))
 
 ## Map KEGG to ENSEMBL and SYMBOL
 KEGG_Annotated <- Annotationdbi_Annotated_ENTREZ_ENSEMBL_SYMBOL %>%
   full_join(KEGG_3,
-            by = "ENTREZID",
-            relationship = "many-to-many"
+    by = "ENTREZID",
+    relationship = "many-to-many"
   )
 
 ########################################## Combine GO, Reactome and KEGG gene sets
@@ -1491,8 +1504,10 @@ annotationTable <- rbind(
 
 ########################################## Prepare intermediate files, for example for GSEA with SetRank
 ## Export annotation dataframe, can help with reproducibility
-write_tsv(x = annotationTable,
-file = "./R_intermediate_files/annotationTable.tsv")
+write_tsv(
+  x = annotationTable,
+  file = "./R_intermediate_files/annotationTable.tsv"
+)
 
 ## Create and export background reference gene set for SetRank
 ## The background will be all genes with at least 1 count in 1 sample
@@ -1501,11 +1516,13 @@ referenceSet <- genes_for_annotation %>%
   dplyr::filter(Gene_Detected == TRUE) %>%
   dplyr::filter(GeneSymbol %in% annotationTable$geneID) %>%
   dplyr::select(GeneSymbol) %>%
-  distinct()# %>%
-  #deframe()
+  distinct() # %>%
+# deframe()
 
-write_csv(x = referenceSet,
-file = "./R_intermediate_files/referenceSet.tsv")
+write_csv(
+  x = referenceSet,
+  file = "./R_intermediate_files/referenceSet.tsv"
+)
 
 ## Create and export gene identifiers for SetRank ranked by adjusted p-value
 ## When used by SetRank this should be a vector, but for exporting it's easier with 1-column table
@@ -1517,25 +1534,12 @@ geneIDs <- Combined_Results_DF %>%
   ) %>%
   distinct() %>%
   arrange(adj_pvalue) %>%
-  dplyr::select(GeneSymbol) #%>%
-  #deframe()
+  dplyr::select(GeneSymbol) # %>%
+# deframe()
 
-write_csv(x = geneIDs,
-file = "./R_intermediate_files/geneIDs.tsv")
+write_csv(
+  x = geneIDs,
+  file = "./R_intermediate_files/geneIDs.tsv"
+)
 
 print("Script 1 finished, continue by running script 2 for the SetRank analysis. Script 2 is tailored to run on UPPMAX")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

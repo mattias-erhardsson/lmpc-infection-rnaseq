@@ -8,7 +8,7 @@ lapply(
     "renv", # For project management
     "BiocManager", # For project management
     "httpgd", # For better figures in interactive mode
-    "plyr", #Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
+    "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "tidyverse", # Data wrangling, processing and presentation. Does not seem to work with renv, so individual packages need to be loaded in this environment
     "vroom", # Faster data wrangling
     "readr", # Data wrangling
@@ -31,7 +31,7 @@ lapply(
     "KEGGREST", # For KEGG
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3" # For cytoscape programmatic analysis
-    ),
+  ),
   library,
   character.only = TRUE
 )
@@ -72,25 +72,33 @@ if (!dir.exists("./R_output_files/Setrank_results")) {
 }
 
 ################################## Data import
-annotationTable <- read_tsv(file = "./R_intermediate_files/annotationTable.tsv",
-col_types = c("cccc"))
+annotationTable <- read_tsv(
+  file = "./R_intermediate_files/annotationTable.tsv",
+  col_types = c("cccc")
+)
 
-referenceSet <- read_tsv(file = "./R_intermediate_files/referenceSet.tsv",
-col_types = c("c")) %>%
-deframe()
+referenceSet <- read_tsv(
+  file = "./R_intermediate_files/referenceSet.tsv",
+  col_types = c("c")
+) %>%
+  deframe()
 
-geneIDs <- as.vector(read_tsv(file = "./R_intermediate_files/geneIDs.tsv",
-col_types = c("c"))) %>%
-deframe()
+geneIDs <- as.vector(read_tsv(
+  file = "./R_intermediate_files/geneIDs.tsv",
+  col_types = c("c")
+)) %>%
+  deframe()
 
 ########################################## GSEA with SetRank
 ## Create set collection object for SetRank
-paste("Available cores:",
-parallel::detectCores(all.tests = FALSE, logical = TRUE))
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE))- 1) # Adapt to the number of cores you use. I have had problems running on 20 cores when I used all cores.
+paste(
+  "Available cores:",
+  parallel::detectCores(all.tests = FALSE, logical = TRUE)
+)
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 1) # Adapt to the number of cores you use. I have had problems running on 20 cores when I used all cores.
 collection <- buildSetCollection(annotationTable,
-                                 referenceSet = referenceSet,
-                                 maxSetSize = 500 # Default is 500
+  referenceSet = referenceSet,
+  maxSetSize = 500 # Default is 500
 )
 
 ## Use SetRank in ranked mode
