@@ -80,6 +80,82 @@ if (!dir.exists("./R_output_files/Tables")) {
 }
 
 ################################## Data import
+## Used in first script
+Sample_List <- read_tsv(file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
+                        col_types = c("ccdd")) %>%
+  dplyr::rename(names = "NGI ID") %>%
+  dplyr::rename(User_ID = "User ID") %>%
+  dplyr::rename(GreaterThan_Q30 = "≥Q30") %>%
+  dplyr::filter(!User_ID %in% c(
+    "H9_11",
+    "H9_12",
+    "H9_13",
+    "H9_14",
+    "H9_15"
+  )) %>%
+  mutate(Infected = c(
+    "Non_Infected", "Non_Infected", "Non_Infected", "Non_Infected", "Non_Infected",
+    "Infected", "Infected", "Infected", "Infected"
+  )) %>%
+  mutate(condition = Infected)
+
+LMPC_RNA_Data <- read_tsv(file = "./R_input_files/LMPC_RNA_Data.txt",
+                          col_types = c("cifdddccidddd")) %>%
+  mutate("Date_harvested" = lubridate::as_date(Date_harvested)) %>% #I couldn't get the date to parse correctly with readr so I change from character to date after reading
+  mutate("Date_sectioned" = lubridate::as_date(Date_sectioned)) %>%
+  dplyr::filter(!User_ID %in% c(
+    "H9_11",
+    "H9_12",
+    "H9_13",
+    "H9_14",
+    "H9_15"
+  ))
+
+files <- file.path(
+  "./P26010/01-RNA-Results/star_salmon",
+  Sample_List$names,
+  "quant.sf"
+)
+print(files)
+file.exists(files)
+
+tx2gene <- read_tsv(
+  file = "./P26010/01-RNA-Results/genome/salmon_tx2gene.tsv",
+  col_names = c(
+    "TXNAME",
+    "GENEID",
+    "GeneSymbol"
+  ),
+  col_types = (c("ccc"))
+)
+
+txi <- tximport(files, type = "salmon", tx2gene = tx2gene)
+glimpse(txi$counts)
+colnames(txi$counts) <- Sample_List$names
+glimpse(txi$counts)
+
+## Results from first script
+sig_genes <- read_tsv(file = "./R_output_files/Tables/Significant_Genes.tsv",
+col_types = c("ccdddc"))
+
+all_detected_genes <- read_tsv("./R_output_files/Tables/All_Detected_Genes.tsv",
+col_types = c("ccdddc"))
+
+TPM_df <- read_tsv("./R_intermediate_files/TPM_df.tsv")
+
+Mean_condition_TPM_sig_genes <- read_tsv("./R_intermediate_files/Mean_condition_TPM_sig_genes.tsv")
+
+## Used in previous script for SetRank
+annotationTable <- read_tsv(file = "./R_intermediate_files/annotationTable.tsv",
+col_types = c("cccc"))
+
+referenceSet <- read_tsv(file = "./R_intermediate_files/referenceSet.tsv",
+col_types = c("c"))
+
+geneIDs <- read_tsv(file = "./R_intermediate_files/geneIDs.tsv",
+col_types = c("c"))
+
+## Results from previous script with SetRank
 Gene_Sets <- read_tsv(file = "./R_output_files/Setrank_results/SetRank_Network_pathways.txt",
                       col_types = c("cccidddd"))
 
@@ -192,7 +268,7 @@ Clusters_Sig %>%
   dplyr::filter(log2FoldChange > 4 | log2FoldChange < -4) %>%
   arrange(desc(log2FoldChange)) %>%
   dplyr::select(GeneSymbol, Significant_gene_sets) %>%
-  inner_join(Clusters, by = "GeneSymbol") %>%
+  inner_join(Clusters_Sig, by = "GeneSymbol") %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Cluster, Significant_gene_sets) %>%
   distinct()
 
@@ -215,7 +291,7 @@ dplyr::inner_join(Clusters_Sig, by = c("Cluster", "GeneSymbol", "log2FoldChange"
     dbName,
     pSetRank) %>%
     distinct() %>%
-dplyr::full_join(Mean_condition_TPM, by = "GeneSymbol")
+dplyr::full_join(Mean_condition_TPM_sig_genes, by = "GeneSymbol")
 
 # Double checking all significant genes are with us
 # Same number of entries?

@@ -736,6 +736,10 @@ TPM_df <- ensdb_gene_counts_transcripts %>%
              by = "User_ID"
   )
 
+# exporting TPM_df intermediate file
+write_tsv(x = TPM_df,
+file = "./R_intermediate_files/TPM_df.tsv")
+
 ########################################## Gene markers for cell types to visualize what cells might be present
 ## PanglaoDB marker genes download
 PanglaoDB_Marker_Genes <- read_tsv(file = "./R_input_files/PanglaoDB_markers_27_Mar_2020.tsv",
@@ -925,10 +929,14 @@ ggsave(
 )
 
 # Mean TPM df for downstream
-Mean_condition_TPM <- TPM_sig_genes %>%
+Mean_condition_TPM_sig_genes <- TPM_sig_genes %>%
 dplyr::select(GeneSymbol, Mean_TPM, condition) %>%
 distinct() %>%
 pivot_wider(names_from = condition, values_from = Mean_TPM)
+
+# Exporting mean TPM intermediary file
+write_tsv(x = Mean_condition_TPM_sig_genes,
+file = "./R_intermediate_files/Mean_condition_TPM_sig_genes.tsv")
 
 ##################################################### Next comes several sections for annotating the genes with gene sets. It is very messy, to whoever is re-running this script I'm so sorry about this
 ##################################################### Annotate GO gene sets with bioMart, might be better than annotationdbi
@@ -1502,7 +1510,7 @@ file = "./R_intermediate_files/referenceSet.tsv")
 ## Create and export gene identifiers for SetRank ranked by adjusted p-value
 ## When used by SetRank this should be a vector, but for exporting it's easier with 1-column table
 geneIDs <- Combined_Results_DF %>%
-  dplyr::filter(GeneSymbol %in% referenceSet) %>%
+  dplyr::filter(GeneSymbol %in% referenceSet$GeneSymbol) %>%
   dplyr::select(
     GeneSymbol,
     adj_pvalue
@@ -1516,3 +1524,18 @@ write_csv(x = geneIDs,
 file = "./R_intermediate_files/geneIDs.tsv")
 
 print("Script 1 finished, continue by running script 2 for the SetRank analysis. Script 2 is tailored to run on UPPMAX")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
