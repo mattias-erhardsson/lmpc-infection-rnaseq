@@ -83,8 +83,7 @@ if (!dir.exists("./R_output_files/Tables")) {
 ## Used in first script
 Sample_List <- read_tsv(
   file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
-  col_types = c("ccdd"),
-  encoding = "UTF-8"
+  col_types = c("ccdd")
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
