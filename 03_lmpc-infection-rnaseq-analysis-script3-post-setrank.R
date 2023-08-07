@@ -83,11 +83,12 @@ if (!dir.exists("./R_output_files/Tables")) {
 ## Used in first script
 Sample_List <- read_tsv(
   file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
-  col_types = c("ccdd")
+  col_types = c("ccdd"),
+  encoding = "UTF-8"
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
-  dplyr::rename(GreaterThan_Q30 = "≥Q30") %>%
+  #dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
   dplyr::filter(!User_ID %in% c(
     "H9_11",
     "H9_12",

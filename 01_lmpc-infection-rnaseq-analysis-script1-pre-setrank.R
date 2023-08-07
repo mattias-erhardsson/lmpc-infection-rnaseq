@@ -102,7 +102,7 @@ Sample_List <- read_tsv(
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
-  dplyr::rename(GreaterThan_Q30 = "≥Q30") %>%
+  #dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
   dplyr::filter(!User_ID %in% c(
     "H9_11",
     "H9_12",
