@@ -10,11 +10,7 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=mattias.erhardsson@gu.se
 
-cd /crex/proj/naiss2023-22-759/
-
 module load R/4.3.1
-
-Rscript UPPMAX_setup.R --no-restore --no-save
 
 cd /crex/proj/naiss2023-22-759/lmpc-infection-rnaseq/
 
