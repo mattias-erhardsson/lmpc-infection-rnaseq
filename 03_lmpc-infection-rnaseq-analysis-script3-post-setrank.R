@@ -481,7 +481,7 @@ STRINGdb$methods()
 STRINGdb$help("get_graph")
 
 #Map to string identifiers
-string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
+#string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
 #Seems like the stringdb-static.org website which stringdb use is down as of writing
 #Will do mapping manually instead
 download.file(url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
@@ -518,12 +518,12 @@ sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
   dplyr::filter(!is.na(string_protein_id))
 
 #The following command only works when the stringdb package website is up
-string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
+#string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
 
 #Which means I have to do it manually
 download.file(url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
               destfile = "./R_input_files/mouse_string_interactions.gz")
-mouse_string_interactions_input_df <- dplyr::read_delim("./R_input_files/mouse_string_interactions.gz",
+mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
                                                  delim = " ",
                                                  col_types = c("ccd"))
 
