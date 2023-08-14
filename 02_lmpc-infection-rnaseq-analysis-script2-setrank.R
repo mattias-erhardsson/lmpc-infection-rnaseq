@@ -10,6 +10,7 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.    
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
