@@ -375,6 +375,9 @@ RCy3::installApp("STRINGapp")
 #Install CLustermaker2 app for cytoscape
 RCy3::installApp("clusterMaker2")
 
+#Install AutoAnnotate app for cytoscape
+RCy3::installApp("AutoAnnotate")
+
 ## SetRank results analysis
 #Load SetRank network
 RCy3::importNetworkFromFile("./R_output_files/Setrank_results/SetRank_Network.net.xml")
@@ -536,6 +539,11 @@ mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %
 significant_genes_igraph <- igraph::graph_from_data_frame(mouse_string_interactions_significant_df, 
                                                   directed = FALSE, 
                                                   vertices = NULL)
+
+#Simplify igraph, for example to remove loops
+significant_genes_igraph <- igraph::simplify(significant_genes_igraph,
+                                             edge.attr.comb = "mean")
+
 #Create cytoscape network from igraph
 createNetworkFromIgraph(
   significant_genes_igraph,
@@ -543,9 +551,31 @@ createNetworkFromIgraph(
   collection = "lmpc_rnaseq"
 )
 
+# Change layout
+# The higher the confidence score, the closer the nodes will be kamada-kawai below
+RCy3::layoutNetwork("kamada-kawai edgeAttribute=combined_score")
+
 #Add annotations for network
+#for downstream annotation with autoannotate, process annotationtable
+#remove generic gene set descriptions " - Mus musculus (house mouse)" from KEGG, 
+#"Mus musculus: " from reactome,
+#"molecular_function", "cellular_component", and "biological_process" from GO
+annotationTable_for_cytoscape <- annotationTable %>%
+  dplyr::rename("GeneSymbol" = geneID) %>%
+  dplyr::mutate(termName = str_remove_all(termName, "- Mus musculus \\(house mouse\\)")) %>%
+  dplyr::mutate(termName = str_remove_all(termName, "Mus musculus:")) %>%
+  dplyr::mutate(termName = str_remove_all(termName, "molecular_function")) %>%
+  dplyr::mutate(termName = str_remove_all(termName, "cellular_component")) %>%
+  dplyr::mutate(termName = str_remove_all(termName, "biological_process")) %>%
+  dplyr::group_by(GeneSymbol) %>%
+  dplyr::summarise("Concatenated_Gene_Set_Descriptions" = toString(termName)) %>%
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions,",")) %>%
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions,"^ *")) %>%
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_replace_all(Concatenated_Gene_Set_Descriptions," +"," "))
+
 sig_genes_cytoscape_annotation_df <- sig_genes_mapped_string_id %>% 
-  dplyr::rename("GeneSymbol" = alias)
+  dplyr::rename("GeneSymbol" = alias) %>%
+  dplyr::left_join(annotationTable_for_cytoscape, by = "GeneSymbol")
 loadTableData(sig_genes_cytoscape_annotation_df,
               data.key.column = "string_protein_id",
               table = "node",
@@ -570,17 +600,38 @@ RCy3::setNodeLabelMapping("GeneSymbol", style.name = style.name)
 RCy3::setNodeSizeDefault(30, style.name = style.name)
 #RCy3::setNodeLabelPositionDefault("S","C","c",0.00,0.00) #This function does not exist yet in this version :(
 RCy3::setNodeFontSizeDefault(30, style.name = style.name)
-RCy3::setNodeWidthDefault(160,
-                          style.name = style.name)
+#RCy3::setNodeWidthDefault(160,
+#                          style.name = style.name)
 #RCy3::deleteVisualStyle(style.name)
 
-#Great, then cluster analysis
-#cluster the network with clusermaker2
-commandsGET("cluster mcl")
-commandsRun("cluster mcl createGroups")
+#Cluster with AutoAnnotate
+# Run the AutoAnnotate command
+aa_command <- paste("autoannotate annotate-clusterBoosted",
+                    "clusterAlgorithm=MCL",
+                    "labelColumn=GeneSymbol",
+                    "maxWords=1")
+print(aa_command)
+commandsGET(aa_command)
+# Annotate a subnetwork
+createSubnetwork(c(1:4),"__mclCluster")
+commandsGET(aa_command)
 
-clustermaker_url <- paste("cluster mcl")
-commandsGET(clustermaker_url)
+
+
+#Great, then cluster analysis
+#cluster the network with clustermaker2
+commandsGET("string")
+commandsGET("cluster mcl")
+commandsPOST("cluster mcl")
+
+#Map color by cluster
+RCy3::setNodeColorMapping("__mclCluster", 
+                          table.column.values = c(1,2,3),
+                          mapping.type = "d",
+                          colors = c('#5577FF','#FFFFFF','#FF7755'),
+                          style.name = style.name)
+
+
 
 ############################################################## Cytoscape vignette part 1 overview
 ## https://cytoscape.org/cytoscape-automation/for-scripters/R/notebooks/Overview-of-RCy3.nb.html

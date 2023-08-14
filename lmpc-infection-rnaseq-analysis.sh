@@ -14,20 +14,11 @@ cd /crex/proj/naiss2023-22-759/
 
 module load R/4.3.1
 
-#renv fails to install all packages in UPPMAX without some help before running the script
-R
-set.seed(1337)
-remotes_url <- "https://github.com/r-lib/remotes/archive/refs/tags/v2.4.2.tar.gz"
-install.packages(remotes_url, repos=NULL, type="source")
-library("remotes")
-remotes::install_version(package = "devtools", version = "2.4.5", upgrade = "never")
-library("devtools")
-devtools::install_version("renv", version = "1.0.1", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
-q()
+Rscript UPPMAX_setup.R --no-restore --no-save
 
 cd /crex/proj/naiss2023-22-759/lmpc-infection-rnaseq/
 
-Rscript lmpc-infection-rnaseq-analysis-script1-pre-setrank.R --no-restore --no-save
+Rscript 01_lmpc-infection-rnaseq-analysis-script1-pre-setrank.R --no-restore --no-save
 echo R script 1 finished
-Rscript lmpc-infection-rnaseq-analysis-script2-setrank.R --no-restore --no-save
+Rscript 02_lmpc-infection-rnaseq-analysis-script2-setrank.R --no-restore --no-save
 echo R script 2 finished, job should now be finished successfully
