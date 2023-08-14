@@ -2,16 +2,21 @@
 set.seed(1337)
 
 ################################## Load packages, commented out what loaded packages for renv
+renv::restore()
+
 lapply(
   c(
-    "devtools", # If new packages of a specific version needs to be installed
     "renv", # For project management
     "BiocManager", # For project management
-    "httpgd", # For better figures in interactive mode
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
-    "tidyverse", # Data wrangling, processing and presentation. Does not seem to work with renv, so individual packages need to be loaded in this environment
+    "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
+    "tidyr", # Tidyverse. Data wrangling, processing and presentation.
+    "readr", # Tidyverse. Data wrangling, processing and presentation.
+    "purrr", # Tidyverse. Data wrangling, processing and presentation.
+    "tibble", # Tidyverse. Data wrangling, processing and presentation.
+    "stringr", # Tidyverse. Data wrangling, processing and presentation.
+    "forcats", # Tidyverse. Data wrangling, processing and presentation.
     "vroom", # Faster data wrangling
-    "readr", # Data wrangling
     "lubridate", # Working with dates, part of tidyverse but not automatically loaded with it
     "svglite", # To make svg files with ggsave
     "writexl", # Writing excel files
@@ -32,8 +37,7 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"#, # For RCy3 vignettes, can also come in handy working with graphs
-    #"ndexr" # Bioconductor package for RCy3 vignette
+    "igraph"# For RCy3/cytoscape
   ),
   library,
   character.only = TRUE
