@@ -487,11 +487,16 @@ STRINGdb$help("get_graph")
 #string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
 #Seems like the stringdb-static.org website which stringdb use is down as of writing
 #Will do mapping manually instead
-download.file(url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
-              destfile = "./R_input_files/mouse_string_alias.gz")
-mouse_alias_df <- read_tsv("./R_input_files/mouse_string_alias.gz",
-         col_types = c("ccc")) %>%
-  dplyr::rename("string_protein_id" = `#string_protein_id`)
+if (!file.exists("./R_input_files/mouse_string_alias.gz")) {
+  download.file(url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
+                destfile = "./R_input_files/mouse_string_alias.gz")
+  mouse_alias_df <- read_tsv("./R_input_files/mouse_string_alias.gz",
+                             col_types = c("ccc")) %>%
+    dplyr::rename("string_protein_id" = `#string_protein_id`)
+} else {
+  print("./R_input_files/mouse_string_alias.gz exists")
+}
+
 
 #Explore how mapping by gene symbol vs by ensembl id works
 #genesymbol
@@ -524,11 +529,16 @@ sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
 #string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
 
 #Which means I have to do it manually
-download.file(url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
-              destfile = "./R_input_files/mouse_string_interactions.gz")
-mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
-                                                 delim = " ",
-                                                 col_types = c("ccd"))
+if (!file.exists("./R_input_files/mouse_string_interactions.gz")) {
+  download.file(url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
+                destfile = "./R_input_files/mouse_string_interactions.gz")
+  mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
+                                                          delim = " ",
+                                                          col_types = c("ccd"))
+} else {
+  print("./R_input_files/mouse_string_interactions.gz exists")
+}
+
 
 mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %>% 
   dplyr::filter(protein1 %in% sig_genes_mapped_string_id$string_protein_id) %>%
@@ -608,8 +618,8 @@ RCy3::setNodeFontSizeDefault(30, style.name = style.name)
 # Run the AutoAnnotate command
 aa_command <- paste("autoannotate annotate-clusterBoosted",
                     "clusterAlgorithm=MCL",
-                    "labelColumn=GeneSymbol",
-                    "maxWords=1")
+                    "labelColumn=Concatenated_Gene_Set_Descriptions",
+                    "maxWords=5")
 print(aa_command)
 commandsGET(aa_command)
 # Annotate a subnetwork
