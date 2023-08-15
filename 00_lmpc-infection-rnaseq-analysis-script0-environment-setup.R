@@ -48,6 +48,7 @@ renv::install("vroom@1.6.3", prompt = FALSE)
 renv::install("svglite@2.1.1", prompt = FALSE)
 renv::install("writexl@1.4.2", prompt = FALSE)
 renv::install("styler@1.10.1", prompt = FALSE)
+renv::install("pbdZMQ@0.3-9", prompt = FALSE)
 renv::install("BiocManager@1.30.22", prompt = FALSE)
 
 # Then Bioconductor packages
@@ -117,7 +118,7 @@ lapply(
 )
 
 # Snapshot packages
-#renv::snapshot()
+renv::snapshot()
 
 # renv restore
 renv::restore()

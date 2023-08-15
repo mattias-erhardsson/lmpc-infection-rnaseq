@@ -2,30 +2,9 @@
 set.seed(1337)
 
 ################################## Install packages
-# Install remotes remotes_2.4.2, which is both the latest version as of 2023-08-14
-# Unlike devtools, remote does not have any dependencies.
-# Therefore, remotes can be used to install a specific version of devtools and its dependencies.
-remotes_url <- "https://github.com/r-lib/remotes/archive/refs/tags/v2.4.2.tar.gz"
-install.packages(remotes_url, repos=NULL, type="source")
-library("remotes")
-sessionInfo()
-
-# Install devtools 2.4.5, which is both the latest version as of 2023-08-14
-# R 4.3.1, Rtools 43, and package remotes 2.4.2 is installed before running this
-remotes::install_version(
-  package = "devtools",
-  version = "2.4.5",
-  upgrade = "never"
-)
-library("devtools")
-sessionInfo()
-
-# renv 1.0.1, latest version as of 2023-08-14
-devtools::install_version("renv", version = "1.0.1", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
-
-################################## Load packages
 renv::restore()
 
+################################## Load packages
 lapply(
   c(
     "renv", # For project management
@@ -1573,3 +1552,4 @@ write_csv(
 )
 
 print("Script 1 finished, continue by running script 2 for the SetRank analysis. Script 2 is tailored to run on UPPMAX")
+

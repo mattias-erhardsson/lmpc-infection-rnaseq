@@ -1,9 +1,10 @@
 ################################## Set seed for reproducibility
 set.seed(1337)
 
-################################## Load packages, commented out what loaded packages for renv
+################################## Install packages
 renv::restore()
 
+################################## Load packages
 lapply(
   c(
     "renv", # For project management
@@ -38,7 +39,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"# For RCy3/cytoscape
+    "igraph"#,# For RCy3/cytoscape
+    #"viridis" #For better visualization in cytoscape
   ),
   library,
   character.only = TRUE
@@ -490,13 +492,13 @@ STRINGdb$help("get_graph")
 if (!file.exists("./R_input_files/mouse_string_alias.gz")) {
   download.file(url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
                 destfile = "./R_input_files/mouse_string_alias.gz")
-  mouse_alias_df <- read_tsv("./R_input_files/mouse_string_alias.gz",
-                             col_types = c("ccc")) %>%
-    dplyr::rename("string_protein_id" = `#string_protein_id`)
 } else {
   print("./R_input_files/mouse_string_alias.gz exists")
 }
 
+mouse_alias_df <- read_tsv("./R_input_files/mouse_string_alias.gz",
+                           col_types = c("ccc")) %>%
+  dplyr::rename("string_protein_id" = `#string_protein_id`)
 
 #Explore how mapping by gene symbol vs by ensembl id works
 #genesymbol
@@ -532,13 +534,14 @@ sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
 if (!file.exists("./R_input_files/mouse_string_interactions.gz")) {
   download.file(url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
                 destfile = "./R_input_files/mouse_string_interactions.gz")
-  mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
-                                                          delim = " ",
-                                                          col_types = c("ccd"))
+
 } else {
   print("./R_input_files/mouse_string_interactions.gz exists")
 }
 
+mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
+                                                        delim = " ",
+                                                        col_types = c("ccd"))
 
 mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %>% 
   dplyr::filter(protein1 %in% sig_genes_mapped_string_id$string_protein_id) %>%
@@ -613,13 +616,71 @@ RCy3::setNodeFontSizeDefault(30, style.name = style.name)
 #RCy3::setNodeWidthDefault(160,
 #                          style.name = style.name)
 #RCy3::deleteVisualStyle(style.name)
+RCy3::getNodeLabelPositionDefault(style.name)
+setNodeLabelPositionDefault(new.nodeAnchor = "E",
+                            new.graphicAnchor = "W",
+                            new.justification = "c",
+                            new.xOffset = 0.00,
+                            new.yOffset = 0.00,
+                            style.name = style.name)
+
+RCy3::setNodeColorMapping("log2FoldChange", 
+                          table.column.values = c(-2,0,2),
+                          mapping.type = "c",
+                          colors = paletteColorBrewerRdBu,
+                          style.name = style.name)
+
+#Cluster with ClusterMaker2
+cluster_command <- paste("cluster mcl",
+                              "createGroups=true",
+                              "inflation_parameter=2.45") #2.5 is default, 2.45 gave more logical clustering with clusters 1:3
+commandsGET(cluster_command)
+
+#Visualize clusters
+clusterviz_command <- paste("clusterviz clusterview",
+                            "attribute=__mclCluster",
+                            "network=current",
+                            "restoreEdges=true",
+                            "selectedOnly=false")
+commandsGET(clusterviz_command)
+
+RCy3::setVisualStyle(style.name)
+
+#Annotate name column from shared name so that cluster nodes can be mapped
+cytoscape_mcl_cluster_annotation <- sig_genes_cytoscape_annotation_df %>%
+  dplyr::select(string_protein_id) %>%
+  base::rbind(enframe(str_replace(as.character(1:22),
+                                  "^",
+                                  "__mclCluster_"), 
+                      name = NULL, 
+                      value = "string_protein_id")) %>%
+  dplyr::mutate("name" = string_protein_id)# %>%
+  #dplyr::rename("shared name" = string_protein_id)
+
+loadTableData(cytoscape_mcl_cluster_annotation,
+              data.key.column = "name",
+              table = "node",
+              table.key.column = "shared name",
+              namespace = "default",
+              network = NULL)
+
+#Improve readability with color mappings and passthrough
+RCy3::setNodeColorBypass(c("__mclCluster_1"),
+                         c("#000000"))
+
+
+
+
+
+
 
 #Cluster with AutoAnnotate
 # Run the AutoAnnotate command
 aa_command <- paste("autoannotate annotate-clusterBoosted",
                     "clusterAlgorithm=MCL",
                     "labelColumn=Concatenated_Gene_Set_Descriptions",
-                    "maxWords=5")
+                    "maxWords=5",
+                    "")
 print(aa_command)
 commandsGET(aa_command)
 # Annotate a subnetwork
