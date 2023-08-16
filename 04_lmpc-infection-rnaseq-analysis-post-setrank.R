@@ -535,8 +535,8 @@ Sig_Sets_Genes <- sig_genes %>%
   left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
   inner_join(Significant_Gene_Sets,
-             join_by(termID == name),
-             suffix = c("_Gene", "_GeneSet")
+    join_by(termID == name),
+    suffix = c("_Gene", "_GeneSet")
   )
 
 # What about all detected genes which are present in significant gene sets?
@@ -544,8 +544,8 @@ Sets_Genes <- all_detected_genes %>%
   left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
   inner_join(Significant_Gene_Sets,
-             join_by(termID == name),
-             suffix = c("_Gene", "_GeneSet")
+    join_by(termID == name),
+    suffix = c("_Gene", "_GeneSet")
   )
 
 # Which significant genes are part of the Rho GTPase gene set?
@@ -557,13 +557,13 @@ Rho_GTPase <- annotationTable %>%
   dplyr::filter(termID == "R-MMU-9012999") %>%
   dplyr::rename("GeneSymbol" = geneID) %>%
   inner_join(all_detected_genes,
-             by = "GeneSymbol"
+    by = "GeneSymbol"
   )
 
 ########################################## Cytoscape/STRING clustering annotation
 ## Import clustering file generated in Cytoscape with STRING and clusermaker app
 Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
-                                 col_types = c("cidfdddddddddddccdcdclccccccccccccdddddddddddddddd")
+  col_types = c("cidfdddddddddddccdcdclccccccccccccdddddddddddddddd")
 ) %>%
   dplyr::rename("GeneSymbol" = `query term`) %>%
   dplyr::rename("Cluster" = `__mclCluster`) %>%
@@ -572,8 +572,8 @@ Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
 # Join with gene sets
 Clusters_All <- annotationTable %>%
   full_join(Gene_Sets,
-            join_by(termID == name),
-            suffix = c("_Gene", "_GeneSet")
+    join_by(termID == name),
+    suffix = c("_Gene", "_GeneSet")
   ) %>%
   # dplyr::filter(pSetRank < 0.05) %>%
   dplyr::rename("GeneSymbol" = geneID) %>%
@@ -583,8 +583,8 @@ Clusters_All <- annotationTable %>%
 
 Clusters_Sig <- annotationTable %>%
   full_join(Significant_Gene_Sets,
-            join_by(termID == name),
-            suffix = c("_Gene", "_GeneSet")
+    join_by(termID == name),
+    suffix = c("_Gene", "_GeneSet")
   ) %>%
   dplyr::filter(pSetRank < 0.05) %>%
   dplyr::rename("GeneSymbol" = geneID) %>%

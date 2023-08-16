@@ -1,14 +1,13 @@
 ################################## Set seed for reproducibility
 set.seed(1337)
 
-################################## Git vaccinate to minimize risk of accidental bad git pushes
-git_vaccinate()
-
 ################################## Install packages
 # Renv bootstrats, but on UPPMAX it fails to install packages correctly with renv::restore()
 # Therefore, packages need to be installed manually
-# Firstly, pbdZMQ@0.3-9 needs to be installed with devtools since even manual renv install fails on UPPMAX 
+# Firstly, pbdZMQ@0.3-9 needs to be installed with devtools since even manual renv install fails on UPPMAX
 renv::install("devtools@2.4.5", prompt = FALSE)
+library("devtools")
+devtools::install_version("pbdZMQ", version = "0.3-9")
 
 # Then restore which installs most of the needed packages
 renv::restore()
@@ -29,7 +28,6 @@ renv::install("vroom@1.6.3", prompt = FALSE)
 renv::install("svglite@2.1.1", prompt = FALSE)
 renv::install("writexl@1.4.2", prompt = FALSE)
 renv::install("styler@1.10.1", prompt = FALSE)
-renv::install("pbdZMQ@0.3-9", prompt = FALSE)
 renv::install("BiocManager@1.30.22", prompt = FALSE)
 
 # Then Bioconductor packages
