@@ -208,9 +208,6 @@ RCy3::installApp("STRINGapp")
 # Install CLustermaker2 app for cytoscape
 RCy3::installApp("clusterMaker2")
 
-# Install AutoAnnotate app for cytoscape
-RCy3::installApp("AutoAnnotate")
-
 ## SetRank results analysis
 # Load SetRank network
 RCy3::importNetworkFromFile("./R_output_files/Setrank_results/SetRank_Network.net.xml")
@@ -504,7 +501,19 @@ cluster_command <- paste(
 ) # 2.5 is default
 RCy3::commandsGET(cluster_command)
 
-# Visualize clusters
+# Map border color to cluster
+RCy3::setNodeBorderWidthDefault(5,
+                                style.name = style.name
+)
+
+RCy3::setNodeBorderColorMapping("__mclCluster",
+                                table.column.values = 1:12, # The largest palette is 12 colors
+                                colors = paletteColorBrewerSet3,
+                                style.name = style.name,
+                                mapping.type = "d"
+)
+
+# Visualize all clusters
 clusterviz_command <- paste(
   "clusterviz clusterview",
   "attribute=__mclCluster",
@@ -516,17 +525,30 @@ RCy3::commandsGET(clusterviz_command)
 
 RCy3::setVisualStyle(style.name)
 
-# Map border color to cluster
-RCy3::setNodeBorderWidthDefault(5,
-  style.name = style.name
-)
+# Visualize only first 6 clusters
+RCy3::setCurrentNetwork("Significant genes string interactions network")
 
-RCy3::setNodeBorderColorMapping("__mclCluster",
-  table.column.values = 1:12, # The largest palette is 12 colors
-  colors = paletteColorBrewerSet3,
-  style.name = style.name,
-  mapping.type = "d"
+RCy3::selectNodes(c("1","2","3","4","5","6"),
+                  by.col = "__mclCluster")
+
+clusterviz_command <- paste(
+  "clusterviz clusterview",
+  "attribute=__mclCluster",
+  "network=current",
+  "restoreEdges=true",
+  "selectedOnly=true"
 )
+RCy3::commandsGET(clusterviz_command)
+
+RCy3::setVisualStyle(style.name)
+
+# Extract mcl clustering
+Cytoscape_clustering <- RCy3::getTableColumns(table = "node",
+                                              columns = c("GeneSymbol","__mclCluster")) %>%
+  dplyr::rename("Cluster" = "__mclCluster")
+
+# Save cytoscape session for posterity
+saveSession(filename = "lmpc-infection-rnaseq-analysis-cytoscape")
 
 ########################################## Exploring which significant gene sets the significant genes belong to
 
@@ -561,14 +583,6 @@ Rho_GTPase <- annotationTable %>%
   )
 
 ########################################## Cytoscape/STRING clustering annotation
-## Import clustering file generated in Cytoscape with STRING and clusermaker app
-Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
-  col_types = c("cidfdddddddddddccdcdclccccccccccccdddddddddddddddd")
-) %>%
-  dplyr::rename("GeneSymbol" = `query term`) %>%
-  dplyr::rename("Cluster" = `__mclCluster`) %>%
-  dplyr::select(GeneSymbol, Cluster)
-
 # Join with gene sets
 Clusters_All <- annotationTable %>%
   full_join(Gene_Sets,
