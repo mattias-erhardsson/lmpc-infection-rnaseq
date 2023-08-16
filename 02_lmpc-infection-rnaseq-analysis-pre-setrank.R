@@ -11,7 +11,7 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
-    "dplyr", # Tidyverse. Data wrangling, processing and presentation.    
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
@@ -39,13 +39,11 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"# For RCy3/cytoscape
+    "igraph" # For RCy3/cytoscape
   ),
   library,
   character.only = TRUE
 )
-
-sessionInfo()
 
 ################################## Check existance of required directories
 if (!dir.exists("P26010")) {
@@ -111,7 +109,7 @@ Sample_List <- read_tsv(
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
-  #dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
+  # dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
   dplyr::filter(!User_ID %in% c(
     "H9_11",
     "H9_12",
@@ -1482,7 +1480,8 @@ annotationTable <- rbind(
       "termID" = KEGG_ID,
       "termName" = KEGG_Name
     )) %>%
-    dplyr::select(geneID, termID, termName, dbName) %>%
+    dplyr::mutate(description = termName) %>%
+    dplyr::select(geneID, termID, termName, dbName, description) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID)),
@@ -1493,7 +1492,8 @@ annotationTable <- rbind(
       "termID" = reactome_gene,
       "termName" = path_name
     )) %>%
-    dplyr::select(geneID, termID, termName, dbName) %>%
+    dplyr::mutate(description = termName) %>%
+    dplyr::select(geneID, termID, termName, dbName, description) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID)),
@@ -1504,7 +1504,8 @@ annotationTable <- rbind(
       "termName" = name_1006,
       "dbName" = namespace_1003
     )) %>%
-    dplyr::select(geneID, termID, termName, dbName) %>%
+    dplyr::mutate(description = termName) %>%
+    dplyr::select(geneID, termID, termName, dbName, description) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID))
@@ -1551,5 +1552,7 @@ write_csv(
   file = "./R_intermediate_files/geneIDs.tsv"
 )
 
-print("Script 1 finished, continue by running script 2 for the SetRank analysis. Script 2 is tailored to run on UPPMAX")
+##################################################### Script finished
+sessionInfo()
 
+print("Script 2 finished")

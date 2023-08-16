@@ -11,7 +11,7 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
-    "dplyr", # Tidyverse. Data wrangling, processing and presentation.    
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
@@ -39,7 +39,7 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"# For RCy3/cytoscape
+    "igraph" # For RCy3/cytoscape
   ),
   library,
   character.only = TRUE

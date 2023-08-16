@@ -9,7 +9,7 @@ git_vaccinate()
 # Unlike devtools, remote does not have any dependencies.
 # Therefore, remotes can be used to install a specific version of devtools and its dependencies.
 remotes_url <- "https://github.com/r-lib/remotes/archive/refs/tags/v2.4.2.tar.gz"
-install.packages(remotes_url, repos=NULL, type="source")
+install.packages(remotes_url, repos = NULL, type = "source")
 library("remotes")
 sessionInfo()
 
@@ -27,7 +27,7 @@ sessionInfo()
 devtools::install_version("renv", version = "1.0.1", repos = "https://ftp.acc.umu.se/mirror/CRAN/")
 
 # initialize renv
-#renv::init()
+# renv::init()
 
 renv::status()
 
@@ -83,7 +83,7 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
-    "dplyr", # Tidyverse. Data wrangling, processing and presentation.    
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
@@ -111,7 +111,7 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"# For RCy3/cytoscape
+    "igraph" # For RCy3/cytoscape
   ),
   library,
   character.only = TRUE
@@ -123,5 +123,7 @@ renv::snapshot()
 # renv restore
 renv::restore()
 
-# Show sessioninfo
+##################################################### Script finished
 sessionInfo()
+
+print("Script 1 finished")

@@ -11,7 +11,7 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
-    "dplyr", # Tidyverse. Data wrangling, processing and presentation.    
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
@@ -39,8 +39,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph"#,# For RCy3/cytoscape
-    #"viridis" #For better visualization in cytoscape
+    "igraph" # ,# For RCy3/cytoscape
+    # "viridis" #For better visualization in cytoscape
   ),
   library,
   character.only = TRUE
@@ -104,7 +104,7 @@ Sample_List <- read_tsv(
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
-  #dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
+  # dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
   dplyr::filter(!User_ID %in% c(
     "H9_11",
     "H9_12",
@@ -341,7 +341,7 @@ write_xlsx(
 
 ############################################################## Planning steps cytoscape
 # Install stringapp
-# installApp('STRINGapp') 
+# installApp('STRINGapp')
 
 # How to map with identifier? Do I want to map with GeneSymbols? EnsemblIDs?
 
@@ -362,200 +362,228 @@ write_xlsx(
 
 
 ############################################################## Programmatic analysis with cytoscape
-#Launch cytoscape before running the following command
-#Ensures connection with cytoscape
+# Launch cytoscape before running the following command
+# Ensures connection with cytoscape
 RCy3::cytoscapePing()
 
-#Log cytoscape version. As this script was written I used cytoscape 3.10.0
+# Log cytoscape version. As this script was written I used cytoscape 3.10.0
 RCy3::cytoscapeVersionInfo()
 
-#Install STRINGapp for cytoscape
+# Install STRINGapp for cytoscape
 RCy3::installApp("STRINGapp")
 
-#Install CLustermaker2 app for cytoscape
+# Install CLustermaker2 app for cytoscape
 RCy3::installApp("clusterMaker2")
 
-#Install AutoAnnotate app for cytoscape
+# Install AutoAnnotate app for cytoscape
 RCy3::installApp("AutoAnnotate")
 
 ## SetRank results analysis
-#Load SetRank network
+# Load SetRank network
 RCy3::importNetworkFromFile("./R_output_files/Setrank_results/SetRank_Network.net.xml")
 
-#Apply the setrank style
+# Apply the setrank style
 RCy3::importVisualStyles("./R_output_files/Setrank_results/setrank.xml")
 
 RCy3::setVisualStyle("SetRank")
 
-#Select nodes with pSetRank < 0.05
+# Select nodes with pSetRank < 0.05
 RCy3::createColumnFilter("significant_filter", "pSetRank", 0.05, "LESS_THAN")
 
-#Create subnetwork of significant nodes
+# Create subnetwork of significant nodes
 RCy3::createSubnetwork(subnetwork.name = "significant_gene_sets")
 
-#Apply layout Edge-Weighted Spring Embedded - jaccard, recommended in SetRank vignette
-#getLayoutNames()
+# Apply layout Edge-Weighted Spring Embedded - jaccard, recommended in SetRank vignette
+# getLayoutNames()
 RCy3::getLayoutNameMapping()
-#kamada-kawai = Edge-weighted Spring Embedded Layout
+# kamada-kawai = Edge-weighted Spring Embedded Layout
 
-#And to set it up with jaccard distances?
-RCy3::getLayoutPropertyNames("kamada-kawai") 
+# And to set it up with jaccard distances?
+RCy3::getLayoutPropertyNames("kamada-kawai")
 
-#Apply kamada-kawai/edgeweighted spring embedded layout with jaccard as edge attribute
+# Apply kamada-kawai/edgeweighted spring embedded layout with jaccard as edge attribute
 RCy3::layoutNetwork("kamada-kawai edgeAttribute=jaccard")
 
-#Reduce node size so they don't overlap as much
-#First need to delete size mapping
+# Reduce node size so they don't overlap as much
+# First need to delete size mapping
 getVisualPropertyNames()
-RCy3::deleteStyleMapping(style.name = "SetRank", 
-                   visual.prop = "NODE_SIZE")
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "NODE_SIZE"
+)
 
 RCy3::setNodeSizeDefault(50, style.name = "SetRank")
 
-#Change text color so it's readable on white background
+# Change text color so it's readable on white background
 RCy3::setNodeLabelColorDefault("#000000", style.name = "SetRank")
 
-#Change node color to something light so it's easier to read the text
-RCy3::deleteStyleMapping(style.name = "SetRank", 
-                   visual.prop = "NODE_FILL_COLOR")
+# Change node color to something light so it's easier to read the text
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "NODE_FILL_COLOR"
+)
 
-#Don't see any interesting patterns here
-#Lets try hierchical layout
-RCy3::getLayoutPropertyNames("hierarchical") 
+# Don't see any interesting patterns here
+# Lets try hierchical layout
+RCy3::getLayoutPropertyNames("hierarchical")
 
-#Improve spacing
+# Improve spacing
 RCy3::layoutNetwork("hierarchical nodeHorizontalSpacing=4 nodeVerticalSpacing=2")
 
-#Interesting pattern with Mus musculus: RHO GTPase cycle at the top with all adges directed towards it
-#Not sure why mRNA processing ends up so high though, only one node directed there.
-#Select Rho GTPase node
+# Interesting pattern with Mus musculus: RHO GTPase cycle at the top with all adges directed towards it
+# Not sure why mRNA processing ends up so high though, only one node directed there.
+# Select Rho GTPase node
 RCy3::selectNodes("Mus musculus: RHO GTPase cycle", by.col = "description")
 
-#Change color of selected nodes to make it stand out
+# Change color of selected nodes to make it stand out
 RCy3::setNodeSelectionColorDefault("#63e5ff", style.name = "SetRank")
 
-#To make nodes with incoming edges stand out, cchange target arrow color
-RCy3::deleteStyleMapping(style.name = "SetRank", 
-                         visual.prop = "EDGE_TARGET_ARROW_UNSELECTED_PAINT")
+# To make nodes with incoming edges stand out, cchange target arrow color
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "EDGE_TARGET_ARROW_UNSELECTED_PAINT"
+)
 RCy3::setEdgeTargetArrowColorDefault("#000026",
-                                     style.name = "SetRank")
+  style.name = "SetRank"
+)
 
-#Likewise, to take attention away from outgoing edges change that color to something more discret
-RCy3::deleteStyleMapping(style.name = "SetRank", 
-                         visual.prop = "EDGE_SOURCE_ARROW_UNSELECTED_PAINT")
+# Likewise, to take attention away from outgoing edges change that color to something more discret
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "EDGE_SOURCE_ARROW_UNSELECTED_PAINT"
+)
 RCy3::setEdgeSourceArrowColorDefault("#a9a9a9",
-                                     style.name = "SetRank")
+  style.name = "SetRank"
+)
 
-#The line widths are based on significantJaccard in a way that doesn't make sense to me
-#Lets make line widths the same for all, they are distracting
-RCy3::deleteStyleMapping(style.name = "SetRank", 
-                         visual.prop = "EDGE_WIDTH")
+# The line widths are based on significantJaccard in a way that doesn't make sense to me
+# Lets make line widths the same for all, they are distracting
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "EDGE_WIDTH"
+)
 RCy3::setEdgeLineWidthDefault(1,
-                              style.name = "SetRank")
+  style.name = "SetRank"
+)
 
-#Change shapes to fit label text
-RCy3::setNodeShapeDefault("ROUND_RECTANGLE", 
-                          style.name = "SetRank")
+# Change shapes to fit label text
+RCy3::setNodeShapeDefault("ROUND_RECTANGLE",
+  style.name = "SetRank"
+)
 RCy3::setNodeWidthDefault(160,
-                          style.name = "SetRank")
+  style.name = "SetRank"
+)
 
-#Export image
-RCy3::exportImage("./R_output_files/Cytoscape_results/SetRank_Hierchical.svg", 
-                  "svg")
+# Export image
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/SetRank_Hierchical.svg",
+  "svg"
+)
 
-#To further improve readability I think manual fixes are need
-#For example, better node label placements.
-#I can't figure out a way to do this in R for this graph
-#Edge legends might also have to be done manually
+# To further improve readability I think manual fixes are need
+# For example, better node label placements.
+# I can't figure out a way to do this in R for this graph
+# Edge legends might also have to be done manually
 
-##Now time for cluster analysis of significant genes based on STRING interactions
-##First we need to construct a network based on the string interactions
-##Using STRINGdb package, see the vignette for more information
-string_db <- STRINGdb$new( version="12", #Latest version as of writing
-                           species=10090, #Mouse
-                           score_threshold=400, #Default
-                           network_type="full", #Full network
-                           input_directory="./R_input_files",
-                           protocol="http")
+## Now time for cluster analysis of significant genes based on STRING interactions
+## First we need to construct a network based on the string interactions
+## Using STRINGdb package, see the vignette for more information
+string_db <- STRINGdb$new(
+  version = "12", # Latest version as of writing
+  species = 10090, # Mouse
+  score_threshold = 400, # Default
+  network_type = "full", # Full network
+  input_directory = "./R_input_files",
+  protocol = "http"
+)
 
-##Listing methods
+## Listing methods
 STRINGdb$methods()
-##Info about get_graph
+## Info about get_graph
 STRINGdb$help("get_graph")
 
-#Map to string identifiers
-#string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
-#Seems like the stringdb-static.org website which stringdb use is down as of writing
-#Will do mapping manually instead
-if (!file.exists("./R_input_files/mouse_string_alias.gz")) {
-  download.file(url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
-                destfile = "./R_input_files/mouse_string_alias.gz")
+# Map to string identifiers
+# string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
+# Seems like the stringdb-static.org website which stringdb use is down as of writing
+# Will do mapping manually instead
+if (!file.exists("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz")) {
+  download.file(
+    url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
+    destfile = "./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz"
+  )
 } else {
-  print("./R_input_files/mouse_string_alias.gz exists")
+  print("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz exists")
 }
 
-mouse_alias_df <- read_tsv("./R_input_files/mouse_string_alias.gz",
-                           col_types = c("ccc")) %>%
+mouse_alias_df <- read_tsv("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
+  col_types = c("ccc")
+) %>%
   dplyr::rename("string_protein_id" = `#string_protein_id`)
 
-#Explore how mapping by gene symbol vs by ensembl id works
-#genesymbol
+# Explore how mapping by gene symbol vs by ensembl id works
+# genesymbol
 String_GeneSymbol_Mapping <- sig_genes %>%
   dplyr::rename("alias" = GeneSymbol) %>%
   left_join(mouse_alias_df,
-            by = "alias") %>%
+    by = "alias"
+  ) %>%
   dplyr::select(-c(source)) %>%
   dplyr::distinct(alias, .keep_all = TRUE) # Pragmatic way to handle multiple matching, but another option would be to make use of groups in cytoscape
-#Any unmapped?
+# Any unmapped?
 String_GeneSymbol_Mapping %>%
   dplyr::filter(is.na(string_protein_id))
-#ensembl id
+# ensembl id
 String_EnsemblID_Mapping <- sig_genes %>%
   dplyr::rename("alias" = GENEID) %>%
   left_join(mouse_alias_df,
-            by = "alias") %>%
+    by = "alias"
+  ) %>%
   dplyr::select(-c(source)) %>%
   dplyr::distinct(alias, .keep_all = TRUE) # Pragmatic way to handle multiple matching, but another option would be to make use of groups in cytoscape
-#Any unmapped?
+# Any unmapped?
 String_EnsemblID_Mapping %>%
   dplyr::filter(is.na(string_protein_id))
-#Mapping by genesymbol was slightly better, got 11 unmatched instead of 12.
+# Mapping by genesymbol was slightly better, got 11 unmatched instead of 12.
 
-#Plot the string network for mapped significant genes
+# Plot the string network for mapped significant genes
 sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
   dplyr::filter(!is.na(string_protein_id))
 
-#The following command only works when the stringdb package website is up
-#string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
+# The following command only works when the stringdb package website is up
+# string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
 
-#Which means I have to do it manually
-if (!file.exists("./R_input_files/mouse_string_interactions.gz")) {
-  download.file(url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
-                destfile = "./R_input_files/mouse_string_interactions.gz")
-
+# Which means I have to do it manually
+if (!file.exists("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz")) {
+  download.file(
+    url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
+    destfile = "./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz"
+  )
 } else {
-  print("./R_input_files/mouse_string_interactions.gz exists")
+  print("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz exists")
 }
 
-mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/mouse_string_interactions.gz",
-                                                        delim = " ",
-                                                        col_types = c("ccd"))
+mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
+  delim = " ",
+  col_types = c("ccd")
+)
 
-mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %>% 
+mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %>%
   dplyr::filter(protein1 %in% sig_genes_mapped_string_id$string_protein_id) %>%
   dplyr::filter(protein2 %in% sig_genes_mapped_string_id$string_protein_id) %>%
-  dplyr::filter(combined_score >= 400) #Default for string database, "medium confidence"
+  dplyr::filter(combined_score >= 400) # Default for string database, "medium confidence"
 
-#Using igraph to create network
-significant_genes_igraph <- igraph::graph_from_data_frame(mouse_string_interactions_significant_df, 
-                                                  directed = FALSE, 
-                                                  vertices = NULL)
+# Using igraph to create network
+significant_genes_igraph <- igraph::graph_from_data_frame(mouse_string_interactions_significant_df,
+  directed = FALSE,
+  vertices = NULL
+)
 
-#Simplify igraph, for example to remove loops
+# Simplify igraph, for example to remove loops
 significant_genes_igraph <- igraph::simplify(significant_genes_igraph,
-                                             edge.attr.comb = "mean")
+  edge.attr.comb = "mean"
+)
 
-#Create cytoscape network from igraph
+# Create cytoscape network from igraph
 RCy3::createNetworkFromIgraph(
   significant_genes_igraph,
   title = "Significant genes string interactions network",
@@ -566,11 +594,11 @@ RCy3::createNetworkFromIgraph(
 # The higher the confidence score, the closer the nodes will be kamada-kawai below
 RCy3::layoutNetwork("kamada-kawai edgeAttribute=combined_score")
 
-#Add annotations for network
-#for downstream annotation with autoannotate, process annotationtable
-#remove generic gene set descriptions " - Mus musculus (house mouse)" from KEGG, 
-#"Mus musculus: " from reactome,
-#"molecular_function", "cellular_component", and "biological_process" from GO
+# Add annotations for network
+# for downstream annotation with autoannotate, process annotationtable
+# remove generic gene set descriptions " - Mus musculus (house mouse)" from KEGG,
+# "Mus musculus: " from reactome,
+# "molecular_function", "cellular_component", and "biological_process" from GO
 annotationTable_for_cytoscape <- annotationTable %>%
   dplyr::rename("GeneSymbol" = geneID) %>%
   dplyr::mutate(termName = str_remove_all(termName, "- Mus musculus \\(house mouse\\)")) %>%
@@ -580,83 +608,94 @@ annotationTable_for_cytoscape <- annotationTable %>%
   dplyr::mutate(termName = str_remove_all(termName, "biological_process")) %>%
   dplyr::group_by(GeneSymbol) %>%
   dplyr::summarise("Concatenated_Gene_Set_Descriptions" = toString(termName)) %>%
-  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions,",")) %>%
-  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions,"^ *")) %>%
-  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_replace_all(Concatenated_Gene_Set_Descriptions," +"," "))
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions, ",")) %>%
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_remove_all(Concatenated_Gene_Set_Descriptions, "^ *")) %>%
+  dplyr::mutate(Concatenated_Gene_Set_Descriptions = str_replace_all(Concatenated_Gene_Set_Descriptions, " +", " "))
 
-sig_genes_cytoscape_annotation_df <- sig_genes_mapped_string_id %>% 
+sig_genes_cytoscape_annotation_df <- sig_genes_mapped_string_id %>%
   dplyr::rename("GeneSymbol" = alias) %>%
   dplyr::left_join(annotationTable_for_cytoscape, by = "GeneSymbol")
 
 RCy3::loadTableData(sig_genes_cytoscape_annotation_df,
-              data.key.column = "string_protein_id",
-              table = "node",
-              table.key.column = "name",
-              namespace = "default",
-              network = NULL)
+  data.key.column = "string_protein_id",
+  table = "node",
+  table.key.column = "name",
+  namespace = "default",
+  network = NULL
+)
 
-#Improve network style
-style.name = "lmpc-rnaseq"
-defaults <- list(NODE_SHAPE="ellipse",
-                 NODE_SIZE=300,
-                 #EDGE_TRANSPARENCY=120,
-                 NODE_LABEL_POSITION="E,W,c,0.00,0.00" #See setNodeCustomPosition
-                 )
+# Improve network style
+style.name <- "lmpc-rnaseq"
+defaults <- list(
+  NODE_SHAPE = "ellipse",
+  NODE_SIZE = 300,
+  # EDGE_TRANSPARENCY=120,
+  NODE_LABEL_POSITION = "E,W,c,0.00,0.00" # See setNodeCustomPosition
+)
 
 RCy3::createVisualStyle(style.name, defaults)
 RCy3::setVisualStyle(style.name)
-#RCy3::setNodeShapeDefault("ROUND_RECTANGLE", style.name = style.name)
+# RCy3::setNodeShapeDefault("ROUND_RECTANGLE", style.name = style.name)
 RCy3::setNodeShapeDefault("ELLIPSE", style.name = style.name)
 RCy3::setNodeColorDefault("#000000", style.name = style.name)
 RCy3::setNodeLabelMapping("GeneSymbol", style.name = style.name)
 RCy3::setNodeSizeDefault(30, style.name = style.name)
-#RCy3::setNodeLabelPositionDefault("S","C","c",0.00,0.00) #This function does not exist yet in this version :(
+# RCy3::setNodeLabelPositionDefault("S","C","c",0.00,0.00) #This function does not exist yet in this version :(
 RCy3::setNodeFontSizeDefault(30, style.name = style.name)
-#RCy3::setNodeWidthDefault(160,
+# RCy3::setNodeWidthDefault(160,
 #                          style.name = style.name)
-#RCy3::deleteVisualStyle(style.name)
+# RCy3::deleteVisualStyle(style.name)
 RCy3::getNodeLabelPositionDefault(style.name)
-RCy3::setNodeLabelPositionDefault(new.nodeAnchor = "E",
-                            new.graphicAnchor = "W",
-                            new.justification = "c",
-                            new.xOffset = 0.00,
-                            new.yOffset = 0.00,
-                            style.name = style.name)
+RCy3::setNodeLabelPositionDefault(
+  new.nodeAnchor = "E",
+  new.graphicAnchor = "W",
+  new.justification = "c",
+  new.xOffset = 0.00,
+  new.yOffset = 0.00,
+  style.name = style.name
+)
 
-#Map node color to log2 fold change in range -2 to 2
-RCy3::setNodeColorMapping("log2FoldChange", 
-                          table.column.values = c(-2,0,2),
-                          mapping.type = "c",
-                          colors = paletteColorBrewerRdBu,
-                          style.name = style.name)
+# Map node color to log2 fold change in range -2 to 2
+RCy3::setNodeColorMapping("log2FoldChange",
+  table.column.values = c(-2, 0, 2),
+  mapping.type = "c",
+  colors = paletteColorBrewerRdBu,
+  style.name = style.name
+)
 
-#Cluster with ClusterMaker2
-cluster_command <- paste("cluster mcl",
-                              "createGroups=true",
-                              "inflation_parameter=2.5") #2.5 is default
+# Cluster with ClusterMaker2
+cluster_command <- paste(
+  "cluster mcl",
+  "createGroups=true",
+  "inflation_parameter=2.5"
+) # 2.5 is default
 RCy3::commandsGET(cluster_command)
 
-#Visualize clusters
-clusterviz_command <- paste("clusterviz clusterview",
-                            "attribute=__mclCluster",
-                            "network=current",
-                            "restoreEdges=true",
-                            "selectedOnly=false")
+# Visualize clusters
+clusterviz_command <- paste(
+  "clusterviz clusterview",
+  "attribute=__mclCluster",
+  "network=current",
+  "restoreEdges=true",
+  "selectedOnly=false"
+)
 RCy3::commandsGET(clusterviz_command)
 
 RCy3::setVisualStyle(style.name)
 
-#Map border color to cluster
+# Map border color to cluster
 RCy3::setNodeBorderWidthDefault(5,
-                                style.name = style.name)
+  style.name = style.name
+)
 
 RCy3::setNodeBorderColorMapping("__mclCluster",
-                                table.column.values = 1:12, #The largest palette is 12 colors
-                                colors = paletteColorBrewerSet3,
-                                style.name = style.name,
-                                mapping.type = "d")
+  table.column.values = 1:12, # The largest palette is 12 colors
+  colors = paletteColorBrewerSet3,
+  style.name = style.name,
+  mapping.type = "d"
+)
 
 ########################################## SessionInfo
 sessionInfo()
 
-print("Script 3 complete")
+print("Script 4 finished")
