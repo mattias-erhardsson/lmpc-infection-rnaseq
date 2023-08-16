@@ -194,173 +194,6 @@ Gene_Sets <- read_tsv(
 Significant_Gene_Sets <- Gene_Sets %>%
   dplyr::filter(pSetRank < 0.05) # SetRank employs several different p-values, see package documentation for more information
 
-########################################## Exploring which significant gene sets the significant genes belong to
-
-# Which significant genes are part of the significant gene sets?
-Sig_Sets_Genes <- sig_genes %>%
-  left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
-  inner_join(Significant_Gene_Sets,
-    join_by(termID == name),
-    suffix = c("_Gene", "_GeneSet")
-  )
-
-# What about all detected genes which are present in significant gene sets?
-Sets_Genes <- all_detected_genes %>%
-  left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
-  inner_join(Significant_Gene_Sets,
-    join_by(termID == name),
-    suffix = c("_Gene", "_GeneSet")
-  )
-
-# Which significant genes are part of the Rho GTPase gene set?
-Sig_Sets_Genes %>%
-  dplyr::filter(termID == "R-MMU-9012999")
-
-# What about all detected genes which are present in the rho gtpase gene set?
-Rho_GTPase <- annotationTable %>%
-  dplyr::filter(termID == "R-MMU-9012999") %>%
-  dplyr::rename("GeneSymbol" = geneID) %>%
-  inner_join(all_detected_genes,
-    by = "GeneSymbol"
-  )
-
-########################################## Cytoscape/STRING clustering annotation
-## Import clustering file generated in Cytoscape with STRING and clusermaker app
-Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
-  col_types = c("cidfdddddddddddccdcdclccccccccccccdddddddddddddddd")
-) %>%
-  dplyr::rename("GeneSymbol" = `query term`) %>%
-  dplyr::rename("Cluster" = `__mclCluster`) %>%
-  dplyr::select(GeneSymbol, Cluster)
-
-# Join with gene sets
-Clusters_All <- annotationTable %>%
-  full_join(Gene_Sets,
-    join_by(termID == name),
-    suffix = c("_Gene", "_GeneSet")
-  ) %>%
-  # dplyr::filter(pSetRank < 0.05) %>%
-  dplyr::rename("GeneSymbol" = geneID) %>%
-  full_join(sig_genes, by = "GeneSymbol") %>%
-  full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster)
-
-Clusters_Sig <- annotationTable %>%
-  full_join(Significant_Gene_Sets,
-    join_by(termID == name),
-    suffix = c("_Gene", "_GeneSet")
-  ) %>%
-  dplyr::filter(pSetRank < 0.05) %>%
-  dplyr::rename("GeneSymbol" = geneID) %>%
-  full_join(all_detected_genes, by = "GeneSymbol") %>%
-  full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster) %>%
-  dplyr::filter(adj_pvalue < 0.05)
-
-# Which gene sets are present in clusters 1-5, and are they down or up-regulated?
-write_xlsx(
-  x = Clusters_Sig %>%
-    dplyr::filter(Cluster %in% 1:5) %>%
-    dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
-    distinct() %>%
-    group_by(Cluster) %>%
-    dplyr::summarise("Mean_log2FoldChange" = mean(log2FoldChange)) %>%
-    full_join(Clusters_Sig, by = "Cluster") %>%
-    dplyr::select(Cluster, termName, Mean_log2FoldChange) %>%
-    distinct() %>%
-    drop_na() %>%
-    group_by(Cluster, Mean_log2FoldChange) %>%
-    summarize(Significant_gene_sets = paste(termName, collapse = "\n")),
-  path = "./R_output_files/Tables/Clusters.xlsx"
-)
-
-# I noticed that cluster 1 contains almost all of the most up-regulated genes
-# How many up-regulated genes with log2FoldChange >2 belong to cluster 1 as compared to the other gene sets?
-Clusters_Sig %>%
-  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
-  distinct() %>%
-  dplyr::filter(log2FoldChange > 2) %>%
-  group_by(Cluster) %>%
-  tally()
-
-# Export annotated clusters
-write_xlsx(
-  x = Clusters_Sig %>%
-    dplyr::select(Cluster, GeneSymbol, log2FoldChange, adj_pvalue) %>%
-    distinct(),
-  path = "./R_output_files/Tables/Significant_Genes_Cluster_Annotation.xlsx"
-)
-
-# Which clusters do the top differentially expressed genes belong to?
-Clusters_Sig %>%
-  group_by(GeneSymbol) %>%
-  summarize(Significant_gene_sets = paste(termName, collapse = "\n")) %>%
-  inner_join(sig_genes, by = "GeneSymbol") %>%
-  dplyr::filter(log2FoldChange > 4 | log2FoldChange < -4) %>%
-  arrange(desc(log2FoldChange)) %>%
-  dplyr::select(GeneSymbol, Significant_gene_sets) %>%
-  inner_join(Clusters_Sig, by = "GeneSymbol") %>%
-  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Cluster, Significant_gene_sets) %>%
-  distinct()
-
-########################################## Combine gene set and clustering annotations for all significant genes
-# A sort of master results file with all significant gene sets, all significant genes, as well as clustering info.
-Sig_Sets_Clusters_Genes_TPM <- Clusters_Sig %>%
-  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
-  dplyr::distinct() %>%
-  dplyr::group_by(Cluster) %>%
-  dplyr::mutate("Mean_Cluster_log2FoldChange" = mean(log2FoldChange)) %>%
-  dplyr::ungroup() %>%
-  dplyr::inner_join(Clusters_Sig, by = c("Cluster", "GeneSymbol", "log2FoldChange")) %>%
-  dplyr::select(
-    Cluster,
-    Mean_Cluster_log2FoldChange,
-    GeneSymbol,
-    log2FoldChange,
-    adj_pvalue,
-    termID,
-    termName,
-    dbName,
-    pSetRank
-  ) %>%
-  distinct() %>%
-  dplyr::full_join(Mean_condition_TPM_sig_genes, by = "GeneSymbol")
-
-# Double checking all significant genes are with us
-# Same number of entries?
-nrow(sig_genes %>% distinct()) == nrow(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% distinct())
-# Which entries do not match?
-sig_genes[!deframe(sig_genes %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol)) == deframe(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol) %>% distinct()), ]
-
-write_xlsx(
-  x = Sig_Sets_Clusters_Genes_TPM,
-  path = "./R_output_files/Tables/summarised-results-of-significant-genes-sets-clusters.xlsx"
-)
-
-############################################################## Planning steps cytoscape
-# Install stringapp
-# installApp('STRINGapp')
-
-# How to map with identifier? Do I want to map with GeneSymbols? EnsemblIDs?
-
-# Load SetRank network
-
-# Annotate with StringApp
-# for more information on string commands:
-# commandsHelp('string')
-# commandsHelp('string disease query'
-# Use STRINGdb package to create string network?
-# https://www.bioconductor.org/packages/release/bioc/html/STRINGdb.html
-
-# Set up  layout
-
-# Analyse similar to above, for example with clustering and hierchical layout
-
-# Use group nodes based on for example cluster, and collapse them for better viz?
-
-
 ############################################################## Programmatic analysis with cytoscape
 # Launch cytoscape before running the following command
 # Ensures connection with cytoscape
@@ -506,16 +339,16 @@ STRINGdb$help("get_graph")
 # string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
 # Seems like the stringdb-static.org website which stringdb use is down as of writing
 # Will do mapping manually instead
-if (!file.exists("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz")) {
+if (!file.exists("./R_input_files/stringdb-v12-10090-protein-aliases.gz")) {
   download.file(
     url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
-    destfile = "./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz"
+    destfile = "./R_input_files/stringdb-v12-10090-protein-aliases.gz"
   )
 } else {
-  print("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz exists")
+  print("./R_input_files/stringdb-v12-10090-protein-aliases.gz exists")
 }
 
-mouse_alias_df <- read_tsv("./R_input_files/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
+mouse_alias_df <- read_tsv("./R_input_files/stringdb-v12-10090-protein-aliases.gz",
   col_types = c("ccc")
 ) %>%
   dplyr::rename("string_protein_id" = `#string_protein_id`)
@@ -553,16 +386,16 @@ sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
 # string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
 
 # Which means I have to do it manually
-if (!file.exists("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz")) {
+if (!file.exists("./R_input_files/stringdb-v12-10090-protein-links.gz")) {
   download.file(
     url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
-    destfile = "./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz"
+    destfile = "./R_input_files/stringdb-v12-10090-protein-links.gz"
   )
 } else {
-  print("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz exists")
+  print("./R_input_files/stringdb-v12-10090-protein-links.gz")
 }
 
-mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
+mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/stringdb-v12-10090-protein-links.gz",
   delim = " ",
   col_types = c("ccd")
 )
@@ -693,6 +526,151 @@ RCy3::setNodeBorderColorMapping("__mclCluster",
   colors = paletteColorBrewerSet3,
   style.name = style.name,
   mapping.type = "d"
+)
+
+########################################## Exploring which significant gene sets the significant genes belong to
+
+# Which significant genes are part of the significant gene sets?
+Sig_Sets_Genes <- sig_genes %>%
+  left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
+  inner_join(Significant_Gene_Sets,
+             join_by(termID == name),
+             suffix = c("_Gene", "_GeneSet")
+  )
+
+# What about all detected genes which are present in significant gene sets?
+Sets_Genes <- all_detected_genes %>%
+  left_join(annotationTable, join_by(GeneSymbol == geneID)) %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Comparison, termID) %>%
+  inner_join(Significant_Gene_Sets,
+             join_by(termID == name),
+             suffix = c("_Gene", "_GeneSet")
+  )
+
+# Which significant genes are part of the Rho GTPase gene set?
+Sig_Sets_Genes %>%
+  dplyr::filter(termID == "R-MMU-9012999")
+
+# What about all detected genes which are present in the rho gtpase gene set?
+Rho_GTPase <- annotationTable %>%
+  dplyr::filter(termID == "R-MMU-9012999") %>%
+  dplyr::rename("GeneSymbol" = geneID) %>%
+  inner_join(all_detected_genes,
+             by = "GeneSymbol"
+  )
+
+########################################## Cytoscape/STRING clustering annotation
+## Import clustering file generated in Cytoscape with STRING and clusermaker app
+Cytoscape_clustering <- read_csv("./R_input_files/Cytoscape_clustering.csv",
+                                 col_types = c("cidfdddddddddddccdcdclccccccccccccdddddddddddddddd")
+) %>%
+  dplyr::rename("GeneSymbol" = `query term`) %>%
+  dplyr::rename("Cluster" = `__mclCluster`) %>%
+  dplyr::select(GeneSymbol, Cluster)
+
+# Join with gene sets
+Clusters_All <- annotationTable %>%
+  full_join(Gene_Sets,
+            join_by(termID == name),
+            suffix = c("_Gene", "_GeneSet")
+  ) %>%
+  # dplyr::filter(pSetRank < 0.05) %>%
+  dplyr::rename("GeneSymbol" = geneID) %>%
+  full_join(sig_genes, by = "GeneSymbol") %>%
+  full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster)
+
+Clusters_Sig <- annotationTable %>%
+  full_join(Significant_Gene_Sets,
+            join_by(termID == name),
+            suffix = c("_Gene", "_GeneSet")
+  ) %>%
+  dplyr::filter(pSetRank < 0.05) %>%
+  dplyr::rename("GeneSymbol" = geneID) %>%
+  full_join(all_detected_genes, by = "GeneSymbol") %>%
+  full_join(Cytoscape_clustering, by = "GeneSymbol") %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster) %>%
+  dplyr::filter(adj_pvalue < 0.05)
+
+# Which gene sets are present in clusters 1-5, and are they down or up-regulated?
+write_xlsx(
+  x = Clusters_Sig %>%
+    dplyr::filter(Cluster %in% 1:5) %>%
+    dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+    distinct() %>%
+    group_by(Cluster) %>%
+    dplyr::summarise("Mean_log2FoldChange" = mean(log2FoldChange)) %>%
+    full_join(Clusters_Sig, by = "Cluster") %>%
+    dplyr::select(Cluster, termName, Mean_log2FoldChange) %>%
+    distinct() %>%
+    drop_na() %>%
+    group_by(Cluster, Mean_log2FoldChange) %>%
+    summarize(Significant_gene_sets = paste(termName, collapse = "\n")),
+  path = "./R_output_files/Tables/Clusters.xlsx"
+)
+
+# I noticed that cluster 1 contains almost all of the most up-regulated genes
+# How many up-regulated genes with log2FoldChange >2 belong to cluster 1 as compared to the other gene sets?
+Clusters_Sig %>%
+  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+  distinct() %>%
+  dplyr::filter(log2FoldChange > 2) %>%
+  group_by(Cluster) %>%
+  tally()
+
+# Export annotated clusters
+write_xlsx(
+  x = Clusters_Sig %>%
+    dplyr::select(Cluster, GeneSymbol, log2FoldChange, adj_pvalue) %>%
+    distinct(),
+  path = "./R_output_files/Tables/Significant_Genes_Cluster_Annotation.xlsx"
+)
+
+# Which clusters do the top differentially expressed genes belong to?
+Clusters_Sig %>%
+  group_by(GeneSymbol) %>%
+  summarize(Significant_gene_sets = paste(termName, collapse = "\n")) %>%
+  inner_join(sig_genes, by = "GeneSymbol") %>%
+  dplyr::filter(log2FoldChange > 4 | log2FoldChange < -4) %>%
+  arrange(desc(log2FoldChange)) %>%
+  dplyr::select(GeneSymbol, Significant_gene_sets) %>%
+  inner_join(Clusters_Sig, by = "GeneSymbol") %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, Cluster, Significant_gene_sets) %>%
+  distinct()
+
+########################################## Combine gene set and clustering annotations for all significant genes
+# A sort of master results file with all significant gene sets, all significant genes, as well as clustering info.
+Sig_Sets_Clusters_Genes_TPM <- Clusters_Sig %>%
+  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+  dplyr::distinct() %>%
+  dplyr::group_by(Cluster) %>%
+  dplyr::mutate("Mean_Cluster_log2FoldChange" = mean(log2FoldChange)) %>%
+  dplyr::ungroup() %>%
+  dplyr::inner_join(Clusters_Sig, by = c("Cluster", "GeneSymbol", "log2FoldChange")) %>%
+  dplyr::select(
+    Cluster,
+    Mean_Cluster_log2FoldChange,
+    GeneSymbol,
+    log2FoldChange,
+    adj_pvalue,
+    termID,
+    termName,
+    dbName,
+    pSetRank
+  ) %>%
+  distinct() %>%
+  dplyr::full_join(Mean_condition_TPM_sig_genes, by = "GeneSymbol")
+
+# Double checking all significant genes are with us
+# Same number of entries?
+nrow(sig_genes %>% distinct()) == nrow(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% distinct())
+# Which entries do not match?
+sig_genes[!deframe(sig_genes %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol)) == deframe(Sig_Sets_Clusters_Genes_TPM %>% dplyr::select(GeneSymbol) %>% arrange(GeneSymbol) %>% distinct()), ]
+
+write_xlsx(
+  x = Sig_Sets_Clusters_Genes_TPM,
+  path = "./R_output_files/Tables/summarised-results-of-significant-genes-sets-clusters.xlsx"
 )
 
 ########################################## SessionInfo
