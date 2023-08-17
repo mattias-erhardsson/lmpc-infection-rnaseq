@@ -2,10 +2,9 @@
 #SBATCH -A naiss2023-22-759
 #SBATCH -p node
 #SBATCH -N 1
-#SBATCH	-C mem256GB
 #SBATCH -o /crex/proj/naiss2023-22-759/lmpc-infection-rnaseq/%x.output
 #SBATCH -e /crex/proj/naiss2023-22-759/lmpc-infection-rnaseq/%x.output
-#SBATCH -t 4-00:00:00
+#SBATCH -t 2-00:00:00
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-user=mattias.erhardsson@gu.se

@@ -85,6 +85,10 @@ annotationTable <- read_tsv(
   file = "./R_intermediate_files/annotationTable.tsv",
   col_types = c("cccc")
 )
+# SetRank seems to break down if I use all gene sets
+# KEGG, Reactome and GO:BP are the most important, sticking with those
+annotationTable <- annotationTable %>%
+  dplyr::filter(dbName %in% c("GO_biological_process","KEGG","Reactome"))
 
 referenceSet <- read_tsv(
   file = "./R_intermediate_files/referenceSet.tsv",

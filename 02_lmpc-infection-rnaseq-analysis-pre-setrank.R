@@ -1498,6 +1498,9 @@ annotationTable <- rbind(
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID)),
   BiomaRt_Annotationdbi_GO %>%
+    dplyr::mutate(namespace_1003 = str_replace(namespace_1003,
+                                               "^",
+                                               "GO_")) %>% 
     dplyr::rename(c(
       "geneID" = GeneSymbol,
       "termID" = go_id,
