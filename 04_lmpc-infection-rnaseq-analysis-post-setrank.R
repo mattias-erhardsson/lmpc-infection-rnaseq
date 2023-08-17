@@ -205,8 +205,11 @@ RCy3::cytoscapeVersionInfo()
 # Install STRINGapp for cytoscape
 RCy3::installApp("STRINGapp")
 
-# Install CLustermaker2 app for cytoscape
+# Install Clustermaker2 app for cytoscape
 RCy3::installApp("clusterMaker2")
+
+# Install Legend Creator app for cytoscape
+RCy3::installApp("Legend Creator")
 
 ## SetRank results analysis
 # Load SetRank network
@@ -486,10 +489,30 @@ RCy3::setNodeLabelPositionDefault(
 )
 
 # Map node color to log2 fold change in range -2 to 2
+#RCy3::setNodeColorMapping("log2FoldChange",
+#  table.column.values = c(-2, 0, 2),
+#  mapping.type = "c",
+#  colors = paletteColorBrewerRdBu,
+#  style.name = style.name
+#)
+
+#viridis_hex_codes <- viridis::plasma(n = 64,
+#                                      ) %>%
+#  stringr::str_replace("FF$","")
+
+#node_color_scale <- seq(from = -2, to = 2, length.out = 64)
+
+#RCy3::setNodeColorMapping("log2FoldChange",
+#                          table.column.values = node_color_scale,
+#                          mapping.type = "c",
+#                          colors = viridis_hex_codes,
+#                          style.name = style.name
+#)
+
 RCy3::setNodeColorMapping("log2FoldChange",
   table.column.values = c(-2, 0, 2),
   mapping.type = "c",
-  colors = paletteColorBrewerRdBu,
+  colors = c("#0000FF","#FFFFFF","#FF0000"),
   style.name = style.name
 )
 
@@ -501,14 +524,19 @@ cluster_command <- paste(
 ) # 2.5 is default
 RCy3::commandsGET(cluster_command)
 
+# Extract mcl clustering
+Cytoscape_clustering <- RCy3::getTableColumns(table = "node",
+                                              columns = c("GeneSymbol","__mclCluster")) %>%
+  dplyr::rename("Cluster" = "__mclCluster")
+
 # Map border color to cluster
-RCy3::setNodeBorderWidthDefault(5,
+RCy3::setNodeBorderWidthDefault(7,
                                 style.name = style.name
 )
 
 RCy3::setNodeBorderColorMapping("__mclCluster",
-                                table.column.values = 1:12, # The largest palette is 12 colors
-                                colors = paletteColorBrewerSet3,
+                                table.column.values = 1:8, # This set only has 8 colors
+                                colors = paletteColorBrewerDark2,
                                 style.name = style.name,
                                 mapping.type = "d"
 )
@@ -542,10 +570,30 @@ RCy3::commandsGET(clusterviz_command)
 
 RCy3::setVisualStyle(style.name)
 
-# Extract mcl clustering
-Cytoscape_clustering <- RCy3::getTableColumns(table = "node",
-                                              columns = c("GeneSymbol","__mclCluster")) %>%
-  dplyr::rename("Cluster" = "__mclCluster")
+# Hide nodes which werent associated with any cluster, a bug means they came along
+# Also, they can't be selected directly.
+# Selection by inverted selection of everything else
+RCy3::selectNodes(c("1","2","3","4","5","6"),
+                  by.col = "__mclCluster")
+
+RCy3::invertNodeSelection()
+
+#RCy3::hideSelectedNodes()
+RCy3::deleteSelectedNodes()
+
+# Consider repositioning clusters 4-6 for easier overview
+# Cluster 4 clearly has a lot of connection with cluster 3
+# Meanwhile, cluster 6 have many connections to cluster 1.
+# This would have to be done manually, however.
+
+# Create legend
+# I cant find any cyrest commands for the legend, so that will have to be done manually
+
+# Save image
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/Significant_genes_STRING_interactions_and_clustering.svg",
+  "svg"
+)
 
 # Save cytoscape session for posterity
 saveSession(filename = "lmpc-infection-rnaseq-analysis-cytoscape")
