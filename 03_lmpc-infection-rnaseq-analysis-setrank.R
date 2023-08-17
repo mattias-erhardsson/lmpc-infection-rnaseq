@@ -134,4 +134,4 @@ exportSingleResult(
   outputPath = "./R_output_files/Setrank_results"
 )
 
-print("Script 2 finished, continue by running script 3. As of writing script 3 would probably not work in a non-interactive mode due to interactions with cytoscape")
+print("Script 3 finished")
