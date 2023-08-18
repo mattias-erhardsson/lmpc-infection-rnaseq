@@ -371,15 +371,7 @@ string_db <- STRINGdb$new(
   protocol = "http"
 )
 
-## Listing methods
-STRINGdb$methods()
-## Info about get_graph
-STRINGdb$help("get_graph")
-
 # Map to string identifiers
-# string_db$map(sig_genes, "GeneSymbol", removeUnmappedRows = TRUE)
-# Seems like the stringdb-static.org website which stringdb use is down as of writing
-# Will do mapping manually instead
 if (!file.exists("./R_input_files/stringdb-v12-10090-protein-aliases.gz")) {
   download.file(
     url = "https://stringdb-downloads.org/download/protein.aliases.v12.0/10090.protein.aliases.v12.0.txt.gz",
@@ -394,8 +386,7 @@ mouse_alias_df <- read_tsv("./R_input_files/stringdb-v12-10090-protein-aliases.g
 ) %>%
   dplyr::rename("string_protein_id" = `#string_protein_id`)
 
-# Explore how mapping by gene symbol vs by ensembl id works
-# genesymbol
+# Mapping by genesymbol
 String_GeneSymbol_Mapping <- sig_genes %>%
   dplyr::rename("alias" = GeneSymbol) %>%
   left_join(mouse_alias_df,
@@ -403,44 +394,25 @@ String_GeneSymbol_Mapping <- sig_genes %>%
   ) %>%
   dplyr::select(-c(source)) %>%
   dplyr::distinct(alias, .keep_all = TRUE) # Pragmatic way to handle multiple matching, but another option would be to make use of groups in cytoscape
-# Any unmapped?
-String_GeneSymbol_Mapping %>%
-  dplyr::filter(is.na(string_protein_id))
-# ensembl id
-String_EnsemblID_Mapping <- sig_genes %>%
-  dplyr::rename("alias" = GENEID) %>%
-  left_join(mouse_alias_df,
-    by = "alias"
-  ) %>%
-  dplyr::select(-c(source)) %>%
-  dplyr::distinct(alias, .keep_all = TRUE) # Pragmatic way to handle multiple matching, but another option would be to make use of groups in cytoscape
-# Any unmapped?
-String_EnsemblID_Mapping %>%
-  dplyr::filter(is.na(string_protein_id))
-# Mapping by genesymbol was slightly better, got 11 unmatched instead of 12.
 
 # Plot the string network for mapped significant genes
 sig_genes_mapped_string_id <- String_GeneSymbol_Mapping %>%
   dplyr::filter(!is.na(string_protein_id))
 
-# The following command only works when the stringdb package website is up
-# string_db$get_interactions(sig_genes_mapped_string_id$string_protein_id)
-
-# Which means I have to do it manually
+# Get string interactions
 if (!file.exists("./R_input_files/stringdb-v12-10090-protein-links.gz")) {
   download.file(
     url = "https://stringdb-downloads.org/download/protein.links.v12.0/10090.protein.links.v12.0.txt.gz",
     destfile = "./R_input_files/stringdb-v12-10090-protein-links.gz"
   )
 } else {
-  print("./R_input_files/stringdb-v12-10090-protein-links.gz")
+  print("./R_input_files/stringdb-v12-10090-protein-links.gz exists")
 }
 
 mouse_string_interactions_input_df <- readr::read_delim("./R_input_files/stringdb-v12-10090-protein-links.gz",
   delim = " ",
   col_types = c("ccd")
 )
-
 mouse_string_interactions_significant_df <- mouse_string_interactions_input_df %>%
   dplyr::filter(protein1 %in% sig_genes_mapped_string_id$string_protein_id) %>%
   dplyr::filter(protein2 %in% sig_genes_mapped_string_id$string_protein_id) %>%
@@ -464,12 +436,11 @@ RCy3::createNetworkFromIgraph(
   collection = "lmpc_rnaseq"
 )
 
-# Change layout
-# The higher the confidence score, the closer the nodes will be kamada-kawai below
+# Change layout to kamada-kawai
+# The higher the confidence score, the closer the nodes will be
 RCy3::layoutNetwork("kamada-kawai edgeAttribute=combined_score")
 
 # Add annotations for network
-# for downstream annotation with autoannotate, process annotationtable
 # remove generic gene set descriptions " - Mus musculus (house mouse)" from KEGG,
 # "Mus musculus: " from reactome,
 # "molecular_function", "cellular_component", and "biological_process" from GO
@@ -498,64 +469,27 @@ RCy3::loadTableData(sig_genes_cytoscape_annotation_df,
   network = NULL
 )
 
-# Improve network style
+# Custom network style
 style.name <- "lmpc-rnaseq"
 defaults <- list(
   NODE_SHAPE = "ellipse",
-  NODE_SIZE = 300,
-  # EDGE_TRANSPARENCY=120,
+  NODE_SIZE = 30,
+  NODE_SHAPE = "ELLIPSE",
+  NODE_PAINT = "#000000",
+  NODE_LABEL_FONT_SIZE = 30,
+  NODE_BORDER_WIDTH = 7,
+  EDGE_TRANSPARENCY=255,
   NODE_LABEL_POSITION = "E,W,c,0.00,0.00" # See setNodeCustomPosition
 )
-
 RCy3::createVisualStyle(style.name, defaults)
-RCy3::setVisualStyle(style.name)
-# RCy3::setNodeShapeDefault("ROUND_RECTANGLE", style.name = style.name)
-RCy3::setNodeShapeDefault("ELLIPSE", style.name = style.name)
-RCy3::setNodeColorDefault("#000000", style.name = style.name)
 RCy3::setNodeLabelMapping("GeneSymbol", style.name = style.name)
-RCy3::setNodeSizeDefault(30, style.name = style.name)
-# RCy3::setNodeLabelPositionDefault("S","C","c",0.00,0.00) #This function does not exist yet in this version :(
-RCy3::setNodeFontSizeDefault(30, style.name = style.name)
-# RCy3::setNodeWidthDefault(160,
-#                          style.name = style.name)
-# RCy3::deleteVisualStyle(style.name)
-RCy3::getNodeLabelPositionDefault(style.name)
-RCy3::setNodeLabelPositionDefault(
-  new.nodeAnchor = "E",
-  new.graphicAnchor = "W",
-  new.justification = "c",
-  new.xOffset = 0.00,
-  new.yOffset = 0.00,
-  style.name = style.name
-)
-
-# Map node color to log2 fold change in range -2 to 2
-#RCy3::setNodeColorMapping("log2FoldChange",
-#  table.column.values = c(-2, 0, 2),
-#  mapping.type = "c",
-#  colors = paletteColorBrewerRdBu,
-#  style.name = style.name
-#)
-
-#viridis_hex_codes <- viridis::plasma(n = 64,
-#                                      ) %>%
-#  stringr::str_replace("FF$","")
-
-#node_color_scale <- seq(from = -2, to = 2, length.out = 64)
-
-#RCy3::setNodeColorMapping("log2FoldChange",
-#                          table.column.values = node_color_scale,
-#                          mapping.type = "c",
-#                          colors = viridis_hex_codes,
-#                          style.name = style.name
-#)
-
 RCy3::setNodeColorMapping("log2FoldChange",
-  table.column.values = c(-2, 0, 2),
-  mapping.type = "c",
-  colors = c("#0000FF","#FFFFFF","#FF0000"),
-  style.name = style.name
+                          table.column.values = c(-2, 0, 2),
+                          mapping.type = "c",
+                          colors = c("#0000FF","#FFFFFF","#FF0000"),
+                          style.name = style.name
 )
+RCy3::setVisualStyle(style.name)
 
 # Cluster with ClusterMaker2
 cluster_command <- paste(
@@ -570,36 +504,33 @@ Cytoscape_clustering <- RCy3::getTableColumns(table = "node",
                                               columns = c("GeneSymbol","__mclCluster")) %>%
   dplyr::rename("Cluster" = "__mclCluster")
 
-# Map border color to cluster
-RCy3::setNodeBorderWidthDefault(7,
-                                style.name = style.name
-)
+GeneSymbols_Clusters_1_2_3 <- Cytoscape_clustering %>%
+  dplyr::inner_join(sig_genes_cytoscape_annotation_df,
+                    by = "GeneSymbol") %>%
+  dplyr::filter(Cluster %in% c("1","2","3")) %>%
+  dplyr::select(string_protein_id) %>%
+  tibble::deframe()
 
-RCy3::setNodeBorderColorMapping("__mclCluster",
-                                table.column.values = 1:8, # This set only has 8 colors
-                                colors = paletteColorBrewerDark2,
-                                style.name = style.name,
-                                mapping.type = "d"
-)
-
-# Visualize all clusters
-clusterviz_command <- paste(
-  "clusterviz clusterview",
-  "attribute=__mclCluster",
-  "network=current",
-  "restoreEdges=true",
-  "selectedOnly=false"
-)
-RCy3::commandsGET(clusterviz_command)
-
-RCy3::setVisualStyle(style.name)
-
-# Visualize only first 6 clusters
-RCy3::setCurrentNetwork("Significant genes string interactions network")
-
-RCy3::selectNodes(c("1","2","3","4","5","6"),
-                  by.col = "__mclCluster")
-
+# There are 3 obvious clusters, visualize them
+RCy3::setNodeFillOpacityDefault(75,
+                                style.name)
+RCy3::setNodeBorderOpacityDefault(75,
+                                style.name)
+RCy3::setNodeBorderOpacityDefault(75,
+                                  style.name)
+RCy3::setNodeLabelOpacityDefault(75,
+                                 style.name)
+RCy3::setNodeFillOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                               255)
+RCy3::setNodeBorderOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                               255)
+RCy3::setNodeBorderOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                               255)
+RCy3::setNodeLabelOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                               255)
+RCy3::selectNodes(c("1","2","3"),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
 clusterviz_command <- paste(
   "clusterviz clusterview",
   "attribute=__mclCluster",
@@ -608,31 +539,57 @@ clusterviz_command <- paste(
   "selectedOnly=true"
 )
 RCy3::commandsGET(clusterviz_command)
-
 RCy3::setVisualStyle(style.name)
+RCy3::setNodeFillOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                               255)
+RCy3::setNodeBorderOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                                 255)
+RCy3::setNodeBorderOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                                 255)
+RCy3::setNodeLabelOpacityBypass(GeneSymbols_Clusters_1_2_3,
+                                255)
 
-# Hide nodes which werent associated with any cluster, a bug means they came along
+# Hide nodes which weren't associated with any cluster, a bug means they came along
 # Also, they can't be selected directly.
 # Selection by inverted selection of everything else
-RCy3::selectNodes(c("1","2","3","4","5","6"),
-                  by.col = "__mclCluster")
-
+RCy3::selectNodes(c("1","2","3"),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
 RCy3::invertNodeSelection()
-
-#RCy3::hideSelectedNodes()
 RCy3::deleteSelectedNodes()
 
-# Consider repositioning clusters 4-6 for easier overview
-# Cluster 4 clearly has a lot of connection with cluster 3
-# Meanwhile, cluster 6 have many connections to cluster 1.
-# This would have to be done manually, however.
+# Legends need to be annotated manually, but Legend Creator app helps with this
 
-# Create legend
-# I cant find any cyrest commands for the legend, so that will have to be done manually
-
-# Save image
+# Save images
+RCy3::setCurrentNetwork("Significant genes string interactions network--clustered")
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Significant_genes_STRING_interactions_and_clustering.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Main_Clusters.svg",
+  "svg"
+)
+RCy3::setCurrentNetwork("Significant genes string interactions network")
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/Sig_String_Network_All.svg",
+  "svg"
+)
+RCy3::selectNodes(c("1"),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster1.svg",
+  "svg"
+)
+RCy3::selectNodes(c("2"),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster2.svg",
+  "svg"
+)
+RCy3::selectNodes(c("3"),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
+RCy3::exportImage(
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster2.svg",
   "svg"
 )
 
