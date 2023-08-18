@@ -39,8 +39,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph" # ,# For RCy3/cytoscape
-    # "viridis" #For better visualization in cytoscape
+    "igraph", # For RCy3/cytoscape
+    "viridis" # Color palette
   ),
   library,
   character.only = TRUE
@@ -195,6 +195,7 @@ Significant_Gene_Sets <- Gene_Sets %>%
   dplyr::filter(pSetRank < 0.05) # SetRank employs several different p-values, see package documentation for more information
 
 ############################################################## Programmatic analysis with cytoscape
+## Setup
 # Launch cytoscape before running the following command
 # Ensures connection with cytoscape
 RCy3::cytoscapePing()
@@ -211,101 +212,142 @@ RCy3::installApp("clusterMaker2")
 # Install Legend Creator app for cytoscape
 RCy3::installApp("Legend Creator")
 
+#
 ## SetRank results analysis
+#
+
 # Load SetRank network
 RCy3::importNetworkFromFile("./R_output_files/Setrank_results/SetRank_Network.net.xml")
 
-# Apply the setrank style
-RCy3::importVisualStyles("./R_output_files/Setrank_results/setrank.xml")
+# Rename network
+RCy3::renameNetwork("SetRank")
 
-RCy3::setVisualStyle("SetRank")
-
+## Hierarchical layout analysis
 # Select nodes with pSetRank < 0.05
-RCy3::createColumnFilter("significant_filter", "pSetRank", 0.05, "LESS_THAN")
+RCy3::createColumnFilter("significant_filter", 
+                         "pSetRank", 
+                         0.05, 
+                         "LESS_THAN")
 
 # Create subnetwork of significant nodes
 RCy3::createSubnetwork(subnetwork.name = "significant_gene_sets")
 
-# Apply layout Edge-Weighted Spring Embedded - jaccard, recommended in SetRank vignette
-# getLayoutNames()
-RCy3::getLayoutNameMapping()
-# kamada-kawai = Edge-weighted Spring Embedded Layout
+# Hierarchical layout
+RCy3::layoutNetwork("hierarchical nodeHorizontalSpacing=4 nodeVerticalSpacing=2")
 
-# And to set it up with jaccard distances?
-RCy3::getLayoutPropertyNames("kamada-kawai")
+# Interesting pattern with Mus musculus: RHO GTPase cycle at the top with all its edges directed towards it
+# Select command for Rho GTPase if you need it
+# RCy3::selectNodes("Mus musculus: RHO GTPase cycle", 
+#                  by.col = "description")
 
-# Apply kamada-kawai/edgeweighted spring embedded layout with jaccard as edge attribute
-RCy3::layoutNetwork("kamada-kawai edgeAttribute=jaccard")
 
-# Reduce node size so they don't overlap as much
-# First need to delete size mapping
-getVisualPropertyNames()
+# Apply the setrank style
+RCy3::importVisualStyles("./R_output_files/Setrank_results/setrank.xml")
+RCy3::setVisualStyle("SetRank")
+
+## Modify the SetRank style
+# Size
 RCy3::deleteStyleMapping(
   style.name = "SetRank",
   visual.prop = "NODE_SIZE"
 )
+RCy3::setNodeSizeDefault(20, style.name = "SetRank")
 
-RCy3::setNodeSizeDefault(50, style.name = "SetRank")
+# Labels
+RCy3::setNodeLabelColorDefault("#000000", 
+                               style.name = "SetRank")
+RCy3::setNodeLabelPositionDefault(
+  new.nodeAnchor = "E",
+  new.graphicAnchor = "W",
+  new.justification = "c",
+  new.xOffset = 0.00,
+  new.yOffset = 0.00,
+  style.name = "SetRank"
+)
+setNodeLabelPositionBypass(c("R-MMU-9006934",
+                             "mmu04932",
+                             "GO:0016049",
+                             "GO:0051258",
+                             "GO:0048568",
+                             "R-MMU-6798695",
+                             "GO:0099572"),
+                           "W,E,c,0.00,0.00")
+setNodeLabelPositionBypass(c("GO:0071560",
+                             "GO:0060537",
+                             "GO:0060589",
+                             "GO:0046777"),
+                           "E,W,c,0.00,0.00")
 
-# Change text color so it's readable on white background
-RCy3::setNodeLabelColorDefault("#000000", style.name = "SetRank")
-
-# Change node color to something light so it's easier to read the text
+# Node fill
 RCy3::deleteStyleMapping(
   style.name = "SetRank",
   visual.prop = "NODE_FILL_COLOR"
 )
+RCy3::setNodeColorDefault("#000000", 
+                          style.name = "SetRank")
+RCy3::setNodeSelectionColorDefault("#63e5ff", 
+                                   style.name = "SetRank")
+# Map node color to pSetRank in range 0 to 0.05 with viridis plasma palette
+setrank_color_scale_values <- seq(from = 0, to = 0.05, length.out = 64)
 
-# Don't see any interesting patterns here
-# Lets try hierchical layout
-RCy3::getLayoutPropertyNames("hierarchical")
+setrank_viridis_hex_codes <- viridis::plasma(n = 64,
+                                      direction = -1) %>%
+  stringr::str_replace("FF$","")
+RCy3::setNodeColorMapping("pSetRank",
+                          table.column.values = setrank_color_scale_values,
+                          mapping.type = "c",
+                          colors = setrank_viridis_hex_codes,
+                          style.name = "SetRank"
+)
 
-# Improve spacing
-RCy3::layoutNetwork("hierarchical nodeHorizontalSpacing=4 nodeVerticalSpacing=2")
 
-# Interesting pattern with Mus musculus: RHO GTPase cycle at the top with all adges directed towards it
-# Not sure why mRNA processing ends up so high though, only one node directed there.
-# Select Rho GTPase node
-RCy3::selectNodes("Mus musculus: RHO GTPase cycle", by.col = "description")
+RCy3::setNodeBorderColorMapping("pSetRank",
+                                table.column.values = setrank_color_scale_values)
 
-# Change color of selected nodes to make it stand out
-RCy3::setNodeSelectionColorDefault("#63e5ff", style.name = "SetRank")
+# Node border
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "NODE_BORDER_PAINT"
+)
+RCy3::setNodeBorderColorDefault("#000000",
+                                style.name = "SetRank")
+RCy3::setNodeBorderWidthDefault(1,
+                                style.name = "SetRank")
 
-# To make nodes with incoming edges stand out, cchange target arrow color
+# Node shapes
+RCy3::setNodeShapeDefault("ELLIPSE",
+                          style.name = "SetRank"
+)
+# Arrows
 RCy3::deleteStyleMapping(
   style.name = "SetRank",
   visual.prop = "EDGE_TARGET_ARROW_UNSELECTED_PAINT"
 )
 RCy3::setEdgeTargetArrowColorDefault("#000026",
-  style.name = "SetRank"
+                                     style.name = "SetRank"
 )
-
-# Likewise, to take attention away from outgoing edges change that color to something more discret
 RCy3::deleteStyleMapping(
   style.name = "SetRank",
   visual.prop = "EDGE_SOURCE_ARROW_UNSELECTED_PAINT"
 )
 RCy3::setEdgeSourceArrowColorDefault("#a9a9a9",
-  style.name = "SetRank"
+                                     style.name = "SetRank"
 )
 
-# The line widths are based on significantJaccard in a way that doesn't make sense to me
-# Lets make line widths the same for all, they are distracting
+# Edge lines
 RCy3::deleteStyleMapping(
   style.name = "SetRank",
   visual.prop = "EDGE_WIDTH"
 )
-RCy3::setEdgeLineWidthDefault(1,
-  style.name = "SetRank"
+RCy3::setEdgeLineWidthDefault(0.5,
+                              style.name = "SetRank"
+)
+RCy3::deleteStyleMapping(
+  style.name = "SetRank",
+  visual.prop = "EDGE_STROKE_UNSELECTED_PAINT"
 )
 
-# Change shapes to fit label text
-RCy3::setNodeShapeDefault("ROUND_RECTANGLE",
-  style.name = "SetRank"
-)
-RCy3::setNodeWidthDefault(160,
-  style.name = "SetRank"
-)
+# Legends need to be annotated manually, but Legend Creator app helps with this
 
 # Export image
 RCy3::exportImage(
@@ -313,12 +355,11 @@ RCy3::exportImage(
   "svg"
 )
 
-# To further improve readability I think manual fixes are need
-# For example, better node label placements.
-# I can't figure out a way to do this in R for this graph
-# Edge legends might also have to be done manually
 
-## Now time for cluster analysis of significant genes based on STRING interactions
+#
+## Cluster analysis of significant genes based on STRING interactions
+#
+
 ## First we need to construct a network based on the string interactions
 ## Using STRINGdb package, see the vignette for more information
 string_db <- STRINGdb$new(
