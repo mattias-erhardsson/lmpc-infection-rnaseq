@@ -567,6 +567,9 @@ RCy3::exportImage(
   "svg"
 )
 RCy3::setCurrentNetwork("Significant genes string interactions network")
+RCy3::selectNodes(c(""),
+                  by.col = "__mclCluster",
+                  preserve.current.selection = FALSE)
 RCy3::exportImage(
   "./R_output_files/Cytoscape_results/Sig_String_Network_All.svg",
   "svg"
@@ -589,7 +592,7 @@ RCy3::selectNodes(c("3"),
                   by.col = "__mclCluster",
                   preserve.current.selection = FALSE)
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster2.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster3.svg",
   "svg"
 )
 
@@ -669,6 +672,13 @@ write_xlsx(
     summarize(Significant_gene_sets = paste(termName, collapse = "\n")),
   path = "./R_output_files/Tables/Clusters.xlsx"
 )
+
+# Vector of genes present in cluster 1
+Cluster1_genes <- Clusters_Sig %>%
+  dplyr::filter(Cluster %in% c(1)) %>%
+  dplyr::select(GeneSymbol) %>%
+  dplyr::distinct() %>%
+  tibble::deframe()
 
 # I noticed that cluster 1 contains almost all of the most up-regulated genes
 # How many up-regulated genes with log2FoldChange >2 belong to cluster 1 as compared to the other gene sets?
