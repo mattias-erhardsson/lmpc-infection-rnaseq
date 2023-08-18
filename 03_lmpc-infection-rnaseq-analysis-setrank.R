@@ -39,7 +39,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph" # For RCy3/cytoscape
+    "igraph", # For RCy3/cytoscape
+    "viridis" # Color palette
   ),
   library,
   character.only = TRUE
@@ -108,7 +109,7 @@ paste(
   "Available cores:",
   parallel::detectCores(all.tests = FALSE, logical = TRUE)
 )
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 1) # Adapt to the number of cores you use. I have had problems running on 20 cores when I used all cores.
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 2) # Running on all cores can make it slower according to package documentation
 collection <- buildSetCollection(annotationTable,
   referenceSet = referenceSet,
   maxSetSize = 500 # Default is 500

@@ -39,7 +39,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph" # For RCy3/cytoscape
+    "igraph", # For RCy3/cytoscape
+    "viridis" # Color palette
   ),
   library,
   character.only = TRUE

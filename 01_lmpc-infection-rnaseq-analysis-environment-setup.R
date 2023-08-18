@@ -28,6 +28,7 @@ renv::install("vroom@1.6.3", prompt = FALSE)
 renv::install("svglite@2.1.1", prompt = FALSE)
 renv::install("writexl@1.4.2", prompt = FALSE)
 renv::install("styler@1.10.1", prompt = FALSE)
+renv::install("viridis@0.6.4", prompt = FALSE)
 renv::install("BiocManager@1.30.22", prompt = FALSE)
 
 # Then Bioconductor packages
@@ -90,7 +91,8 @@ lapply(
     "styler", # R studio addin for interactively adhere to the tidyverse style guide
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
-    "igraph" # For RCy3/cytoscape
+    "igraph", # For RCy3/cytoscape
+    "viridis" # Color palette
   ),
   library,
   character.only = TRUE
