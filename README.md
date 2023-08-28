@@ -1,3 +1,4 @@
 # lmpc-infection-rnaseq
 Version control for RNA sequencing (RNAseq) data analysis on Helicobacter pylori-infected mouse gastric surface mucus cells collected with Laser Microdissection and Pressure Catapulting (LMPC)
+
 Important notes about scripts and R versions: All scripts except 03_lmpc-infection-rnaseq-analysis-uppmax-renv-deactivate.R and 04_lmpc-infection-rnaseq-analysis-uppmax-setrank.R are run locally with renv and R verison 4.3.1. These two scripts are run in UPPMAX with R version 4.2.1 and R_Packages/4.2.1 modules loaded. To save space in github when generating intermediary files for the UPPMAX scripts, the previous scripts are also run on UPPMAX with renv and R version 4.3.1.
