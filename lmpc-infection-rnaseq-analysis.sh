@@ -17,4 +17,12 @@ Rscript 01_lmpc-infection-rnaseq-analysis-environment-setup.R --no-restore --no-
 
 Rscript 02_lmpc-infection-rnaseq-analysis-pre-setrank.R --no-restore --no-save
 
-Rscript 03_lmpc-infection-rnaseq-analysis-setrank.R --no-restore --no-save
+module unload R/4.3.1
+
+module load R/4.2.1
+
+module load R_packages/4.2.1
+
+Rscript 03_lmpc-infection-rnaseq-analysis-uppmax-renv-deactivate.R --no-save
+
+Rscript 04_lmpc-infection-rnaseq-analysis-uppmax-setrank.R --no-save

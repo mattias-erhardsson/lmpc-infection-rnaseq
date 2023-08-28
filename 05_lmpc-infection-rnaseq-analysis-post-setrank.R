@@ -1,3 +1,6 @@
+################################## Script start
+print("Starting script 5")
+
 ################################## Set seed for reproducibility
 set.seed(1337)
 
@@ -746,4 +749,4 @@ write_xlsx(
 ########################################## SessionInfo
 sessionInfo()
 
-print("Script 4 finished")
+print("Script 5 finished")

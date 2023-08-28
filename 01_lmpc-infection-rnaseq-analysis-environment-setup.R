@@ -1,3 +1,6 @@
+################################## Script start
+print("Starting script 1")
+
 ################################## Set seed for reproducibility
 set.seed(1337)
 
