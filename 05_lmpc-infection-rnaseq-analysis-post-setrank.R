@@ -746,6 +746,14 @@ write_xlsx(
   path = "./R_output_files/Tables/summarised-results-of-significant-genes-sets-clusters.xlsx"
 )
 
+##########################################  Citing packages
+renv::install("knitr")
+library("knitr")
+renv::install("bookdown")
+library("bookdown")
+
+knitr::write_bib(c(.packages(), "bookdown"), "packages.bib")
+
 ########################################## SessionInfo
 sessionInfo()
 

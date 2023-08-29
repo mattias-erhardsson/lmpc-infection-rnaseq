@@ -1107,7 +1107,9 @@ GO <- GO1 %>%
     by = "go_id",
     multiple = "all"
   ) %>%
-  dplyr::filter(go_id != "")
+  dplyr::filter(go_id != "") %>%
+  dplyr::filter(namespace_1003 != "")
+
 
 GO_Entrez <- Entrez %>%
   mutate(entrezgene_id = as.character(entrezgene_id)) %>%
@@ -1485,7 +1487,7 @@ annotationTable <- rbind(
       "termName" = KEGG_Name
     )) %>%
     dplyr::mutate(description = termName) %>%
-    dplyr::select(geneID, termID, termName, dbName, description) %>%
+    dplyr::select(geneID, termID, termName, description, dbName) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID)),
@@ -1497,7 +1499,7 @@ annotationTable <- rbind(
       "termName" = path_name
     )) %>%
     dplyr::mutate(description = termName) %>%
-    dplyr::select(geneID, termID, termName, dbName, description) %>%
+    dplyr::select(geneID, termID, termName, description, dbName) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID)),
@@ -1512,12 +1514,13 @@ annotationTable <- rbind(
       "dbName" = namespace_1003
     )) %>%
     dplyr::mutate(description = termName) %>%
-    dplyr::select(geneID, termID, termName, dbName, description) %>%
+    dplyr::select(geneID, termID, termName, description, dbName) %>%
     distinct() %>%
     dplyr::filter(!is.na(termID)) %>%
     dplyr::filter(!is.na(geneID))
 ) %>%
-  dplyr::filter(dbName != "")
+  dplyr::filter(dbName != "") %>%
+  tidyr::unite("description", description:dbName, sep = " ", remove = FALSE)
 
 ########################################## Prepare intermediate files, for example for GSEA with SetRank
 ## Export annotation dataframe, can help with reproducibility

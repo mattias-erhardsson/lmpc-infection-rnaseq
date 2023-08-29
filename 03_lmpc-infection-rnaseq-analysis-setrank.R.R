@@ -1,18 +1,50 @@
-################################## important notice about environment
-# This script is made to be run on UPPMAX
-# renv has been deactivated
-# modules R/4.2.1 and R_packages/4.2.1 have been loaded prior to runnin this script
-
 ################################## Script start
-print("Starting script 4")
+print("Starting script 3")
 
 ################################## Set seed for reproducibility
 set.seed(1337)
 
+################################## Install packages
+renv::restore()
+
 ################################## Load packages
 lapply(
-  c("tidyverse",
-    "SetRank"),
+  c(
+    "renv", # For project management
+    "BiocManager", # For project management
+    "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
+    "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
+    "tidyr", # Tidyverse. Data wrangling, processing and presentation.
+    "readr", # Tidyverse. Data wrangling, processing and presentation.
+    "purrr", # Tidyverse. Data wrangling, processing and presentation.
+    "tibble", # Tidyverse. Data wrangling, processing and presentation.
+    "stringr", # Tidyverse. Data wrangling, processing and presentation.
+    "forcats", # Tidyverse. Data wrangling, processing and presentation.
+    "vroom", # Faster data wrangling
+    "lubridate", # Working with dates, part of tidyverse but not automatically loaded with it
+    "svglite", # To make svg files with ggsave
+    "writexl", # Writing excel files
+    "DESeq2", # Differential gene expression
+    "IHW", # Better power for adjusting p-values of differential gene expression
+    "tximport", # Importing RNAseq pipeline data
+    "tximportData", # Importing RNAseq pipeline data
+    "umap", # For umap, Uniform Manifold Approximation and Projection
+    "EnsDb.Mmusculus.v79", # ensdb package for mouse
+    "ensembldb", # For getting gene lengths necessary for TPM calculation
+    "SetRank", # For the SetRank GSEA
+    "parallel", # For parallelisation
+    "biomaRt", # For annotation and GO gene sets
+    "org.Mm.eg.db", # For GO term annotation, might be used instead of biomaRt
+    "reactome.db", # For annotationdbi of reactome
+    "GO.db", # For GO term annotation, might be used instead of biomaRt
+    "KEGGREST", # For KEGG
+    "styler", # R studio addin for interactively adhere to the tidyverse style guide
+    "RCy3", # For cytoscape programmatic analysis
+    "STRINGdb", # For STRING database annotation
+    "igraph", # For RCy3/cytoscape
+    "viridis" # Color palette
+  ),
   library,
   character.only = TRUE
 )
