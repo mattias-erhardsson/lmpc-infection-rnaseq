@@ -100,17 +100,34 @@ geneIDs <- as.vector(read_tsv(
 )) %>%
   deframe()
 
+################################## Remove GO:CC and GO:MF
+# Remove GO:CC and GO:MF gene sets to reduce computational burden
+# These two are not as important as GO:BP, KEGG and Reactome.
+annotationTable <- annotationTable %>%
+  dplyr::filter(dbName != "GO_molecular_function") %>% 
+  dplyr::filter(dbName != "GO_cellular_component")
+
+referenceSet <- referenceSet[referenceSet %in% annotationTable$geneID]
+
+geneIDs <-  geneIDs[geneIDs %in% annotationTable$geneID]
+
 ########################################## GSEA with SetRank
 ## Create set collection object for SetRank
 paste(
   "Available cores:",
   parallel::detectCores(all.tests = FALSE, logical = TRUE)
 )
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 1) # Running on all cores can make it slower according to package documentation
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 2) # Running on all cores can make it slower according to package documentation
 collection <- buildSetCollection(annotationTable,
   referenceSet = referenceSet,
   maxSetSize = 500 # Default is 500
 )
+
+# Save the collection object to make it easier to re-run analysis
+base::save(collection,
+     file = "./R_intermediate_files/collection.RData")
+
+base::load("./R_intermediate_files/collection.RData")
 
 ## Use SetRank in ranked mode
 ## CAUTION! Might take several days to complete.
