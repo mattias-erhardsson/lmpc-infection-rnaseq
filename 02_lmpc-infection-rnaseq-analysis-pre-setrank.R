@@ -169,6 +169,14 @@ glimpse(txi$counts)
 colnames(txi$counts) <- Sample_List$names
 glimpse(txi$counts)
 
+################################## Investigate statistics about sequencing depth
+# Mean sequencing depth and standard deviation
+Sample_List %>%
+  dplyr::summarise("Mean sequencing depth in mreads" = mean(Mreads))
+
+Sample_List %>%
+  dplyr::summarise("Sequenced reads standard deviation" = sd(Mreads))
+
 ################################## Investigate statistics about LMPC and RNA purification data
 ## Table of statistics about sectioning time, LMPC area, RIN and V200 values
 Summary_LMPC_RNA_data <- LMPC_RNA_Data %>%
