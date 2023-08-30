@@ -42,7 +42,7 @@ renv::install("bioc::tximportData", prompt = FALSE)
 renv::install("bioc::umap", prompt = FALSE)
 renv::install("bioc::EnsDb.Mmusculus.v79", prompt = FALSE)
 renv::install("bioc::ensembldb", prompt = FALSE)
-renv::install("bioc::SetRank", prompt = FALSE)
+#renv::install("bioc::SetRank", prompt = FALSE) # See below, was removed from CRAN
 renv::install("bioc::biomaRt", prompt = FALSE)
 renv::install("bioc::org.Mm.eg.db", prompt = FALSE)
 renv::install("bioc::reactome.db", prompt = FALSE)
@@ -57,6 +57,12 @@ renv::install("bioc::igraph", prompt = FALSE)
 # Important addition was made in commit 2023-08-08
 # Using latest available commit 2023-08-12 below
 renv::install("cytoscape/RCy3@3015129d026346c1307d06e1eb9d48be6d675318", prompt = FALSE)
+
+# Another special case is SetRank. 
+# This package was removed from CRAN after my analysis started. 
+# It was removed since the maintainer couldn't be reached.
+# Therefore, it has to be downloaded form github.
+renv::install("C3c6e6/SetRank@95de5c902e0b07a4b913742ce32905e30f9b77b1", prompt = FALSE)
 
 ################################## Load packages again
 ## Appears tidyverse does not play nicely with renv, have to call packages I need manually
