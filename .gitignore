@@ -53,3 +53,4 @@ R_intermediate_files/Mean_condition_TPM_sig_genes.tsv
 R_intermediate_files/referenceSet.tsv
 R_intermediate_files/TPM_df.tsv
 R_intermediate_files/collection.RData
+R_intermediate_files/network.RData

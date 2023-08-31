@@ -1530,6 +1530,12 @@ annotationTable <- rbind(
   dplyr::filter(dbName != "") %>%
   tidyr::unite("description", description:dbName, sep = " ", remove = FALSE)
 
+# After doing some testing, it seems like including the description column like instructed in the package manual actually breaks the package
+# Despite the script throwing warnings, it seems like description must NOT be included!
+# This way, it uses the termname columns as description, despite the warnings of the column description not being present
+annotationTable <- annotationTable %>% 
+  dplyr::select(-description)
+
 ########################################## Prepare intermediate files, for example for GSEA with SetRank
 ## Export annotation dataframe, can help with reproducibility
 write_tsv(

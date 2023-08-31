@@ -112,6 +112,10 @@ collection <- buildSetCollection(annotationTable,
   maxSetSize = 500 # Default is 500
 )
 
+# Save the collection object to make it easier to re-run analysis
+base::save(collection,
+           file = "./R_intermediate_files/collection.RData")
+
 ## Use SetRank in ranked mode
 ## CAUTION! Might take several days to complete.
 network <- setRankAnalysis(
@@ -121,6 +125,10 @@ network <- setRankAnalysis(
   setPCutoff = 0.01, # This is default of 0.01
   fdrCutoff = 0.05 # This is default of 0.05
 )
+
+# Save the network object to make it easier to re-run analysis
+base::save(network,
+           file = "./R_intermediate_files/network.RData")
 
 ## Export results
 exportSingleResult(
@@ -135,4 +143,4 @@ exportSingleResult(
 ########################################## SessionInfo
 sessionInfo()
 
-print("Script 4 finished")
+print("Script 3 finished")

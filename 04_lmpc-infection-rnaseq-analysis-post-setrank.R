@@ -1,5 +1,5 @@
 ################################## Script start
-print("Starting script 5")
+print("Starting script 4")
 
 ################################## Set seed for reproducibility
 set.seed(1337)
@@ -747,14 +747,14 @@ write_xlsx(
 )
 
 ##########################################  Citing packages
-renv::install("knitr")
-library("knitr")
-renv::install("bookdown")
-library("bookdown")
+#renv::install("knitr")
+#library("knitr")
+#renv::install("bookdown")
+#library("bookdown")
 
-knitr::write_bib(c(.packages(), "bookdown"), "packages.bib")
+#knitr::write_bib(c(.packages(), "bookdown"), "packages.bib")
 
 ########################################## SessionInfo
 sessionInfo()
 
-print("Script 5 finished")
+print("Script 4 finished")
