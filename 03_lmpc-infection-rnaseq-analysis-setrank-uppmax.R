@@ -100,6 +100,18 @@ geneIDs <- as.vector(read_tsv(
 )) %>%
   deframe()
 
+################################## Test using only KEGG and Reactome pathways
+annotationTable <- annotationTable %>% 
+  dplyr::filter(dbName == "KEGG" | dbName == "Reactome")
+
+referenceSet <- referenceSet %in% annotationTable$geneID
+
+geneIDs <- geneIDs %in% annotationTable$geneID
+
+annotationTable %>% 
+  dplyr::select(dbName) %>% 
+  distinct()
+
 ########################################## GSEA with SetRank
 ## Create set collection object for SetRank
 paste(
