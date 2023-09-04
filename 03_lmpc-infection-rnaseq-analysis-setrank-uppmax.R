@@ -115,32 +115,32 @@ geneIDs <- as.vector(read_tsv(
 ################################## Test with a few gene sets from each database
 #old_network <- read_tsv(file = "./R_output_files/Setrank_results/SetRank_Network_pathways.txt")
 
-genesets_random_test_vector <- annotationTable %>% 
-  dplyr::select(dbName) %>% 
-  group_by(dbName) %>% 
-  slice_sample(n = 10)
+#genesets_random_test_vector <- annotationTable %>% 
+#  dplyr::select(dbName) %>% 
+#  group_by(dbName) %>% 
+#  slice_sample(n = 10)
 
-genesets_positives_test_vector <- c("R-MMU-9012999",
-  "R-MMU-199977",
-  "R-MMU-8980692",
-  "R-MMU-3700989",
-  "R-MMU-9013422",
-  "R-MMU-170834",
-  "R-MMU-72766",
-  "mmu04932",
-  "mmu05171",
-  "mmu00190",
-  "mmu05132",
-  "GO:0051020",
-  "GO:0008047",
-  "GO:0007346",
-  "GO:0016049",
-  "GO:0005769",
-  "GO:0015629")
+#genesets_positives_test_vector <- c("R-MMU-9012999",
+#  "R-MMU-199977",
+#  "R-MMU-8980692",
+#  "R-MMU-3700989",
+#  "R-MMU-9013422",
+#  "R-MMU-170834",
+#  "R-MMU-72766",
+#  "mmu04932",
+#  "mmu05171",
+#  "mmu00190",
+#  "mmu05132",
+#  "GO:0051020",
+#  "GO:0008047",
+#  "GO:0007346",
+#  "GO:0016049",
+#  "GO:0005769",
+#  "GO:0015629")
 
-annotationTable <- annotationTable %>% 
-  dplyr::filter(termID %in% c(genesets_random_test_vector, 
-                              genesets_positives_test_vector))
+#annotationTable <- annotationTable %>% 
+#  dplyr::filter(termID %in% c(genesets_random_test_vector, 
+#                              genesets_positives_test_vector))
 
 referenceSet <- base::intersect(referenceSet, annotationTable$geneID)
 
