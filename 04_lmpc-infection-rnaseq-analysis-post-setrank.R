@@ -203,7 +203,7 @@ Significant_Gene_Sets <- Gene_Sets %>%
 # Ensures connection with cytoscape
 RCy3::cytoscapePing()
 
-# Log cytoscape version. As this script was written I used cytoscape 3.10.0
+# Log cytoscape version. As this script was written I used cytoscape 3.10.1
 RCy3::cytoscapeVersionInfo()
 
 # Install STRINGapp for cytoscape
@@ -236,7 +236,7 @@ RCy3::createColumnFilter("significant_filter",
 RCy3::createSubnetwork(subnetwork.name = "significant_gene_sets")
 
 # Hierarchical layout
-RCy3::layoutNetwork("hierarchical nodeHorizontalSpacing=4 nodeVerticalSpacing=2")
+RCy3::layoutNetwork("hierarchical nodeHorizontalSpacing=20 nodeVerticalSpacing=50")
 
 # Interesting pattern with Mus musculus: RHO GTPase cycle at the top with all its edges directed towards it
 # Select command for Rho GTPase if you need it
@@ -267,18 +267,14 @@ RCy3::setNodeLabelPositionDefault(
   new.yOffset = 0.00,
   style.name = "SetRank"
 )
-setNodeLabelPositionBypass(c("R-MMU-9006934",
+setNodeLabelPositionBypass(c("mmu00190",
                              "mmu04932",
-                             "GO:0016049",
-                             "GO:0051258",
-                             "GO:0048568",
-                             "R-MMU-6798695",
-                             "GO:0099572"),
+                             "R-MMU-9711123"),
                            "W,E,c,0.00,0.00")
-setNodeLabelPositionBypass(c("GO:0071560",
-                             "GO:0060537",
-                             "GO:0060589",
-                             "GO:0046777"),
+
+setNodeLabelPositionBypass(c("R-MMU-156827",
+                             "mmu05171",
+                             "R-MMU-9006934"),
                            "E,W,c,0.00,0.00")
 
 # Node fill
@@ -302,10 +298,6 @@ RCy3::setNodeColorMapping("pSetRank",
                           colors = setrank_viridis_hex_codes,
                           style.name = "SetRank"
 )
-
-
-RCy3::setNodeBorderColorMapping("pSetRank",
-                                table.column.values = setrank_color_scale_values)
 
 # Node border
 RCy3::deleteStyleMapping(
@@ -350,16 +342,27 @@ RCy3::deleteStyleMapping(
   visual.prop = "EDGE_STROKE_UNSELECTED_PAINT"
 )
 
+# Set white background
+setBackgroundColorDefault(
+  "#FFFFFF",
+  style.name = "SetRank")
+
+# Set a more universally available font than helvetica which seems to be the default
+setNodeFontFaceDefault("Calibri", 
+                       style.name = "SetRank")
+
 # Legends need to be annotated manually, but Legend Creator app helps with this
 
 # Export image
+# If your operating system is set to a language with characters not present in English, this might cause encoding errors with SVG
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/SetRank_Hierchical.svg",
-  "svg"
+  "./R_output_files/Cytoscape_results/SetRank_Hierchical_Raw.svg",
+  type = "SVG"
 )
 
 
-#
+
+
 ## Cluster analysis of significant genes based on STRING interactions
 #
 
@@ -497,7 +500,7 @@ RCy3::setVisualStyle(style.name)
 # Cluster with ClusterMaker2
 cluster_command <- paste(
   "cluster mcl",
-  "createGroups=true",
+  "createGroups=false",
   "inflation_parameter=2.5"
 ) # 2.5 is default
 RCy3::commandsGET(cluster_command)
@@ -566,7 +569,7 @@ RCy3::deleteSelectedNodes()
 # Save images
 RCy3::setCurrentNetwork("Significant genes string interactions network--clustered")
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Main_Clusters.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Main_Clusters_Raw.svg",
   "svg"
 )
 RCy3::setCurrentNetwork("Significant genes string interactions network")
@@ -574,28 +577,28 @@ RCy3::selectNodes(c(""),
                   by.col = "__mclCluster",
                   preserve.current.selection = FALSE)
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Network_All.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Network_All_Raw.svg",
   "svg"
 )
 RCy3::selectNodes(c("1"),
                   by.col = "__mclCluster",
                   preserve.current.selection = FALSE)
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster1.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster1_Raw.svg",
   "svg"
 )
 RCy3::selectNodes(c("2"),
                   by.col = "__mclCluster",
                   preserve.current.selection = FALSE)
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster2.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster2_Raw.svg",
   "svg"
 )
 RCy3::selectNodes(c("3"),
                   by.col = "__mclCluster",
                   preserve.current.selection = FALSE)
 RCy3::exportImage(
-  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster3.svg",
+  "./R_output_files/Cytoscape_results/Sig_String_Network_Cluster3_Raw.svg",
   "svg"
 )
 
@@ -620,18 +623,6 @@ Sets_Genes <- all_detected_genes %>%
   inner_join(Significant_Gene_Sets,
     join_by(termID == name),
     suffix = c("_Gene", "_GeneSet")
-  )
-
-# Which significant genes are part of the Rho GTPase gene set?
-Sig_Sets_Genes %>%
-  dplyr::filter(termID == "R-MMU-9012999")
-
-# What about all detected genes which are present in the rho gtpase gene set?
-Rho_GTPase <- annotationTable %>%
-  dplyr::filter(termID == "R-MMU-9012999") %>%
-  dplyr::rename("GeneSymbol" = geneID) %>%
-  inner_join(all_detected_genes,
-    by = "GeneSymbol"
   )
 
 ########################################## Cytoscape/STRING clustering annotation
@@ -659,10 +650,10 @@ Clusters_Sig <- annotationTable %>%
   dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue, termID, termName, dbName, pSetRank, Cluster) %>%
   dplyr::filter(adj_pvalue < 0.05)
 
-# Which gene sets are present in clusters 1-5, and are they down or up-regulated?
+# Which gene sets are present in clusters 1-3, and are they down or up-regulated?
 write_xlsx(
   x = Clusters_Sig %>%
-    dplyr::filter(Cluster %in% 1:5) %>%
+    dplyr::filter(Cluster %in% 1:3) %>%
     dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
     distinct() %>%
     group_by(Cluster) %>%
@@ -691,6 +682,37 @@ Clusters_Sig %>%
   dplyr::filter(log2FoldChange > 2) %>%
   group_by(Cluster) %>%
   tally()
+
+# How about genes with lfch > 0
+Clusters_Sig %>%
+  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+  distinct() %>%
+  dplyr::filter(log2FoldChange > 0) %>%
+  group_by(Cluster) %>%
+  tally()
+
+# And specifically, cluster 1 vs everything else
+Clusters_Sig %>%
+  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+  distinct() %>%
+  dplyr::filter(log2FoldChange > 2) %>% 
+  dplyr::mutate("is_cluster_1" = Cluster == 1) %>% 
+  dplyr::mutate("is_cluster_1" = replace_na(is_cluster_1, FALSE)) %>% 
+  group_by(is_cluster_1) %>%
+  tally() %>% 
+  mutate("percentage" = n / sum(n)) %>% 
+  mutate("sum_n" = sum(n))
+
+Clusters_Sig %>%
+  dplyr::select(Cluster, GeneSymbol, log2FoldChange) %>%
+  distinct() %>%
+  dplyr::filter(log2FoldChange > 0) %>% 
+  dplyr::mutate("is_cluster_1" = Cluster == 1) %>% 
+  dplyr::mutate("is_cluster_1" = replace_na(is_cluster_1, FALSE)) %>% 
+  group_by(is_cluster_1) %>%
+  tally() %>% 
+  mutate("percentage" = n / sum(n)) %>% 
+  mutate("sum_n" = sum(n))
 
 # Export annotated clusters
 write_xlsx(

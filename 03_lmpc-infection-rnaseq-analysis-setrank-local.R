@@ -104,13 +104,11 @@ geneIDs <- as.vector(read_tsv(
 # I cant make SetRank work properly with big data sets on my HPC cluster UPPMAX
 # Therefore I need to run the code locally
 # But with all 5 gene sets, this is too heavy for my computer
-# Therefore, I will restrict the analysis to what I think are the most biologically relevant, namely:
-# GO:BP, KEGG and Reactome
-# Also, the bug on UPPMAX replaces all _ with . so I wonder if thats the bug.
+# It also breaks down when trying to run with one GO term.
+# Therefore, I'm left with the might more lighter option of running KEGG + Rectome
 annotationTable <- annotationTable %>% 
   dplyr::filter(dbName %in% c("KEGG",
-                              "Reactome",
-                              "GO_biological_process"))
+                              "Reactome"))
 
 referenceSet <- base::intersect(referenceSet, annotationTable$geneID)
 
@@ -122,7 +120,7 @@ paste(
   "Available cores:",
   parallel::detectCores(all.tests = FALSE, logical = TRUE)
 )
-options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 1) # Running on all cores can make it slower according to package documentation
+options(mc.cores = as.integer(parallel::detectCores(all.tests = FALSE, logical = TRUE)) - 2) # Running on all cores can make it slower according to package documentation
 collection <- buildSetCollection(annotationTable,
   referenceSet = referenceSet,
   maxSetSize = 500 # Default is 500
