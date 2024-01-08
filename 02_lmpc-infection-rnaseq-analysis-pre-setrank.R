@@ -952,14 +952,15 @@ TPM_sig_genes <- TPM_df %>%
 
 TPM_sig_genes_plot <- ggplot(TPM_sig_genes, aes(x = condition, y = Mean_TPM, group = GeneSymbol)) +
   geom_line() +
-  geom_label(aes(label = GeneSymbol))
+  geom_label(aes(label = GeneSymbol)) +
+  theme_bw()
 print(TPM_sig_genes_plot)
 
 ggsave(
-  filename = "./R_output_files/Figures/TPM_sig_genes_plot.svg",
+  filename = "./R_output_files/Figures/TPM_sig_genes_plot.eps",
   plot = TPM_sig_genes_plot,
-  width = 2250,
-  height = 2625,
+  width = 1100,
+  height = 1305,
   units = "px"
 )
 
