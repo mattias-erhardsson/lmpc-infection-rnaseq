@@ -238,10 +238,10 @@ LMPC_RNA_Plot <- ggplot(
   theme_minimal()
 LMPC_RNA_Plot
 ggsave(
-  filename = "./R_output_files/Figures/LMPC_RNA_Plot.svg",
+  filename = "./R_output_files/Figures/LMPC_RNA_Plot.eps",
   plot = LMPC_RNA_Plot,
-  width = 2250,
-  height = 2625,
+  width = 990,
+  height = 1550,
   units = "px"
 )
 
@@ -394,7 +394,8 @@ PCA <- ggplot(df, aes(
   y = PC2,
   color = condition
 )) +
-  geom_label(aes(label = User_ID)) +
+  geom_label(aes(label = User_ID),
+             size = 2) +
   labs(
     x = paste0(
       "PC1 (captures ",
@@ -411,14 +412,15 @@ PCA <- ggplot(df, aes(
       summary(pca)$importance[3, 2],
       " of variance in gene expresssion"
     )
-  )
+  ) +
+  theme_bw()
 print(PCA)
 
 ggsave(
-  filename = "./R_output_files/Figures/PCA.svg",
+  filename = "./R_output_files/Figures/PCA.eps",
   plot = PCA,
-  width = 2250,
-  height = 2625,
+  width = 1484,
+  height = 700,
   units = "px"
 )
 
@@ -435,14 +437,15 @@ PC_Variance <- ggplot(
     y = Proportion_of_variance_captured
   )
 ) +
-  geom_point()
+  geom_point() +
+  theme_bw()
 print(PC_Variance)
 
 ggsave(
-  filename = "./R_output_files/Figures/PC_Variance.svg",
+  filename = "./R_output_files/Figures/PC_Variance.eps",
   plot = PC_Variance,
-  width = 2250,
-  height = 2625,
+  width = 742,
+  height = 1400,
   units = "px"
 )
 
@@ -479,17 +482,19 @@ UMAP_Plot <- ggplot(
   )
 ) +
   # geom_point() +
-  geom_label(aes(label = User_ID)) +
+  geom_label(aes(label = User_ID),
+             size = 2) +
   labs(
     title = "UMAP dimensionality reduction on PCA with PC1 through PC5"
-  )
+  ) +
+  theme_bw()
 print(UMAP_Plot)
 
 ggsave(
-  filename = "./R_output_files/Figures/UMAP_Plot.svg",
+  filename = "./R_output_files/Figures/UMAP_Plot.eps",
   plot = UMAP_Plot,
-  width = 2250,
-  height = 2625,
+  width = 1484,
+  height = 700,
   units = "px"
 )
 
@@ -614,7 +619,7 @@ Volcano_Plot <- ggplot(
     x = "log2(fold change)",
     y = "-log10(adjusted P-value)"
   ) +
-  theme_bw() + # Select theme with a white background
+  theme_bw() +
   theme(
     panel.border = element_rect(colour = "black", fill = NA),
     panel.grid.minor = element_blank(),
@@ -623,10 +628,10 @@ Volcano_Plot <- ggplot(
 print(Volcano_Plot)
 
 ggsave(
-  filename = "./R_output_files/Figures/Volcano_Plot_Differential_Gene_Expression_Infection.svg",
+  filename = "./R_output_files/Figures/Volcano_Plot_Differential_Gene_Expression_Infection.eps",
   plot = Volcano_Plot,
-  width = 2250,
-  height = 2625,
+  width = 2226,
+  height = 1205,
   units = "px"
 )
 
@@ -907,10 +912,10 @@ Marker_Genes_Plot
 
 ## Save the plot
 ggsave(
-  filename = "./R_output_files/Figures/Marker_Genes_Plot.svg",
+  filename = "./R_output_files/Figures/Marker_Genes_Plot.eps",
   plot = Marker_Genes_Plot,
-  width = 2250,
-  height = 2625,
+  width = 2230,
+  height = 1300,
   units = "px"
 )
 

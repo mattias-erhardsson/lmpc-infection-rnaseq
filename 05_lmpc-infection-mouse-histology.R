@@ -91,11 +91,41 @@ if (!dir.exists("./R_output_files/Tables")) {
 }
 
 ################################## Data import
-Histology_Data <- read_tsv(
-  file = "R_input_files/Histology_Data.tsv",
-  col_types = c("cddffl"))
+Histology_Data <- read_tsv(file = "./R_input_files/Histology_Data.tsv")
 
 ################################## Plot histology data
+#Statistical test of histological assays with fdr adjustment
+
+HAI_pvalue <- wilcox.test(x = Histology_Data %>%
+              dplyr::filter(condition == "Infected") %>% 
+              dplyr::select(HAI_Total) %>% 
+              deframe(),
+            y = Histology_Data %>%
+              dplyr::filter(condition == "Non_Infected") %>% 
+              dplyr::select(HAI_Total) %>% 
+              deframe(),
+            exact = FALSE)[["p.value"]]
+print(HAI_pvalue)
+
+Bacteria_pvalue <- wilcox.test(x = Histology_Data %>%
+                                 dplyr::filter(condition == "Infected") %>% 
+                                 dplyr::select(Bacteria) %>% 
+                                 deframe(),
+                               y = Histology_Data %>%
+                                 dplyr::filter(condition == "Non_Infected") %>% 
+                                 dplyr::select(Bacteria) %>% 
+                                 deframe(),
+                               exact = FALSE)[["p.value"]]
+print(Bacteria_pvalue)
+
+p.adjust(p = )
+
+Histological_Assay_Tests <- tibble(assay = c("HAI", 
+                                             "Bacteria"),
+                                   pvalue = c(HAI_pvalue, 
+                                              Bacteria_pvalue)) %>% 
+  mutate(padj = p.adjust(pvalue, method = "BH"))
+
 #HAI total
 HAI_Total_Plot <- ggplot(Histology_Data,
        aes(x = condition,
@@ -103,12 +133,16 @@ HAI_Total_Plot <- ggplot(Histology_Data,
            color = condition)) +
   geom_jitter(width = 0.1, height = 0) +
   scale_y_continuous(breaks = 0:24) +
-  theme_bw()
+  theme_bw() +
+  labs(title = str_c("adjusted p-value = ", as.character(Histological_Assay_Tests %>% 
+                                            dplyr::filter(assay == "HAI") %>% 
+                                            dplyr::select(padj) %>% 
+                                            deframe())))
 print(HAI_Total_Plot)
-ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.svg",
+ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.eps",
        plot = HAI_Total_Plot,
-       width = 2250,
-       height = 2625,
+       width = 750,
+       height = 1120,
        units = "px")
 
 #Bacteria
@@ -116,17 +150,24 @@ Bacteria_Plot <- ggplot(Histology_Data,
        aes(x = condition,
            y = Bacteria,
            color = condition)) +
-  geom_jitter(width = 0.1, height = 0) +
+  geom_jitter(width = 0.1, 
+              height = 0) +
   scale_y_continuous(breaks = seq(from = 0,
                                   to = 80,
                                   by = 10)) +
-  theme_bw()
+  theme_bw() +
+  labs(title = str_c("adjusted p-value = ", as.character(Histological_Assay_Tests %>% 
+                                            dplyr::filter(assay == "Bacteria") %>% 
+                                            dplyr::select(padj) %>% 
+                                            deframe())))
 print(Bacteria_Plot)
-ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.svg",
+ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.eps",
        plot = Bacteria_Plot,
-       width = 2250,
-       height = 2625,
+       width = 750,
+       height = 1120,
        units = "px")
+
+
 
 ########################################## SessionInfo
 sessionInfo()

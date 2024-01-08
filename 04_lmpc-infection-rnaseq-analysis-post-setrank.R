@@ -565,6 +565,7 @@ RCy3::invertNodeSelection()
 RCy3::deleteSelectedNodes()
 
 # Legends need to be annotated manually, but Legend Creator app helps with this
+# For the publication figure, gene names are removed but the image will have them for easier navigation
 
 # Save images
 RCy3::setCurrentNetwork("Significant genes string interactions network--clustered")
