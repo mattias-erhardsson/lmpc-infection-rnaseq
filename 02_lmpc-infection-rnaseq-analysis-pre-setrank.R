@@ -810,10 +810,12 @@ Gene_Filter <- PanglaoDB_Marker_Genes %>%
 Cell_Types_Filter <- c(
   "B cells",
   "Basophils",
+  "Crypt cells",
   "Dendritic cells",
   "Endothelial cells",
   "Enteroendocrine cells",
   "Eosinophils",
+  "Fibroblasts",
   "Foveolar cells",
   "Gastric chief cells",
   "Macrophages",
@@ -825,11 +827,14 @@ Cell_Types_Filter <- c(
   "Enterochromaffin cells",
   # "Neuroendocrine cells", #These marker genes overlap with other genes so this cell type wouldn't show up after downstream filters
   "Neutrophils",
+  "Stromal cells",
   "Parietal cells",
+  "Pericytes",
   "Plasma cells",
   "Plasmacytoid dendritic cells",
   "Proliferating Tff2+ cells", # A version of metaplastic cells
-  "T cells"
+  "T cells",
+  "Tuft cells"
 )
 
 ## Filter marker genes which show up in multiple cell types in our analysis in order to increase specificity
@@ -860,7 +865,12 @@ TPM_ggplot_df <- PanglaoDB_Marker_Genes %>%
     relationship = "many-to-many"
   ) %>%
   dplyr::select(Cell_Type, GeneSymbol, TPM, names, condition, organ, `canonical marker`, specificity_mouse) %>%
-  distinct()
+  distinct() %>% 
+  mutate(TPM_Log10 = log10(TPM)) %>% 
+  mutate(TPM_Log2 = log2(TPM)) %>% 
+  group_by(Cell_Type) %>% 
+  mutate(Mean_Cell_Type_TPM = mean(TPM)) %>% 
+  ungroup()
 
 ## How many marker genes are there for each cell type?
 TPM_ggplot_df %>%
@@ -900,14 +910,16 @@ Marker_Genes_Plot <- ggplot(
   TPM_ggplot_df_annotated,
   aes(
     x = Cell_Type,
-    y = TPM,
+    y = TPM_Log10,  # Extreme differences in TPM, better to visualise on log scale
     shape = condition,
     color = High_TPM_Genes
   )
 ) +
   geom_jitter(width = 0.25) +
+  scale_y_continuous(breaks = seq(0, max(TPM_ggplot_df$TPM_Log10), by = 1)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_hline(yintercept = 3)
 Marker_Genes_Plot
 
 ## Save the plot
@@ -938,6 +950,124 @@ TPM_ggplot_df_annotated %>%
   dplyr::select(Cell_Type, GeneSymbol) %>%
   distinct() %>%
   plyr::count("Cell_Type")
+
+########################################## Investigate which genes are the top-most expressed in the non-infected mice
+Normal_High_Abundance_Genes <- TPM_df %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  group_by(GeneSymbol) %>% 
+  mutate(Mean_GeneSymbol_TPM = mean(TPM)) %>% 
+  ungroup() %>% 
+  dplyr::filter(TPM > 4000) # The lowest TPM of Muc5ac was 4689. The highest TPM of non-foveolar marker genes was 1479 (Atp4a). 4000 is below the Muc5ac, yet much higher than the highest non-foveolar gene. This should strike a balance between specificity and sensitivity fo the description of a normal mouse gastric corpus foveolar cell.
+
+# How many genes would this be?
+Normal_High_Abundance_Genes %>% 
+  dplyr::select(GeneSymbol, Mean_GeneSymbol_TPM) %>% 
+  distinct()
+# 29 genes
+
+# What about with a cutoff using the lowest Muc5ac expression?
+Normal_High_Abundance_Genes <- TPM_df %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  dplyr::filter(TPM >= min(TPM_df %>% 
+                  dplyr::filter(GeneSymbol == "Muc5ac") %>% 
+                  dplyr::select(TPM) %>% 
+                  deframe())) %>% 
+  dplyr::select(GeneSymbol) %>% 
+  distinct() %>% 
+  inner_join(TPM_df, by = "GeneSymbol") %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  mutate(TPM_Log10 = log10(TPM)) %>% 
+  group_by(GeneSymbol) %>% 
+  mutate(Mean_GeneSymbol_TPM = mean(TPM)) %>% 
+  mutate(Mean_GeneSymbol_TPM_Log10 = mean(TPM_Log10)) %>% 
+  ungroup() %>% 
+  inner_join(all_detected_genes, by = c("GeneSymbol", "GENEID"))
+
+# How many genes would this be?
+Normal_High_Abundance_Genes %>% 
+  dplyr::select(GeneSymbol, Mean_GeneSymbol_TPM) %>% 
+  distinct()
+# 26 genes
+
+# What about with a cutoff using the lowest Muc5ac expression, but with the mean of the gene has to be higher instead of just the highest TPM of all samples has to be higher?
+Normal_High_Abundance_Genes <- TPM_df %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  mutate(TPM_Log10 = log10(TPM)) %>% 
+  group_by(GeneSymbol) %>% 
+  mutate(Mean_GeneSymbol_TPM = mean(TPM)) %>% 
+  mutate(Mean_GeneSymbol_TPM_Log10 = mean(TPM_Log10)) %>% 
+  ungroup() %>% 
+  dplyr::filter(Mean_GeneSymbol_TPM >= min(TPM_df %>% 
+                             dplyr::filter(GeneSymbol == "Muc5ac") %>% 
+                             dplyr::select(TPM) %>% 
+                             deframe())) %>% 
+  distinct() %>% 
+  inner_join(all_detected_genes, by = c("GeneSymbol", "GENEID"))
+
+# How many genes would this be?
+Normal_High_Abundance_Genes %>% 
+  dplyr::select(GeneSymbol, Mean_GeneSymbol_TPM) %>% 
+  distinct()
+# 18 genes
+
+# 18 genes is feasible for manual review. The cutoff is rather strict, but makes biological sense. And it allows the possibility of inclusion of genes with lower TPM than Muc5ac.
+
+# Visualize
+Normal_High_Abundance_Genes_Plot <- ggplot(
+  Normal_High_Abundance_Genes,
+  aes(
+    x = GeneSymbol,
+    y = TPM_Log10,  # Extreme differences in TPM, better to visualise on log scale
+  )
+) +
+  geom_jitter(width = 0.25) +
+  scale_y_continuous(breaks = seq(0, max(Normal_High_Abundance_Genes$TPM_Log10), by = 0.1)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+Normal_High_Abundance_Genes_Plot
+
+# Compress data frame with TPM and Gene Symbol
+Normal_High_Abundance_Genes <- Normal_High_Abundance_Genes %>% 
+  dplyr::select(GeneSymbol, Mean_GeneSymbol_TPM) %>% 
+  distinct() %>% 
+  arrange(desc(Mean_GeneSymbol_TPM)) %>% 
+  mutate("High_Abundance_TPM" = TRUE)
+
+# Add info if marker gene according to PanglaoDb and/or Bockerstett, and get TPM for all marker genes no matter source
+# The potential marker genes according to our data that has high TPM is marked as high abundance tpm
+Mean_GeneSymbol_TPM_Non_Infected <- TPM_df %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  group_by(GeneSymbol) %>% 
+  mutate(Mean_GeneSymbol_TPM = mean(TPM)) %>% 
+  ungroup() %>% 
+  dplyr::select(GeneSymbol, Mean_GeneSymbol_TPM) %>% 
+  distinct()
+
+Normal_High_Abundance_Genes_PanglaoDB <- PanglaoDB_Marker_Genes %>% 
+  dplyr::filter(Cell_Type == "Foveolar cells") %>% 
+  dplyr::filter(str_detect(species, "Mm")) %>% 
+  mutate("PanglaoDB_Canonical_Marker" = ifelse(is.na(`canonical marker`), FALSE, TRUE)) %>% 
+  dplyr::select(GeneSymbol, PanglaoDB_Canonical_Marker) %>% 
+  dplyr::mutate(PanglaoDB_Foveolar_Cell_Marker = TRUE) %>% 
+  inner_join(Mean_GeneSymbol_TPM_Non_Infected, by = "GeneSymbol")
+
+Normal_High_Abundance_Genes_Bockerstett <- Bockerstett_Gene_List %>% 
+  dplyr::filter(Cell_Type == "Foveolar cells") %>% 
+  dplyr::select(GeneSymbol) %>% 
+  dplyr::mutate(Bockerstett_Foveolar_Cell_Marker = TRUE) %>% 
+  inner_join(Mean_GeneSymbol_TPM_Non_Infected, by = "GeneSymbol")
+
+Normal_High_Abundance_Genes_And_Marker_Genes <- Normal_High_Abundance_Genes %>% 
+  dplyr::full_join(Normal_High_Abundance_Genes_PanglaoDB, by = c("GeneSymbol", "Mean_GeneSymbol_TPM")) %>% 
+  dplyr::full_join(Normal_High_Abundance_Genes_Bockerstett, by = c("GeneSymbol", "Mean_GeneSymbol_TPM")) %>% 
+  dplyr::mutate(across(everything(), ~ replace_na(.x, replace = FALSE))) %>% 
+  arrange(desc(Mean_GeneSymbol_TPM)) %>% 
+  mutate("Mean_GeneSymbol_TPM" = round(Mean_GeneSymbol_TPM))
+
+# Export table
+write_xlsx(x = Normal_High_Abundance_Genes_And_Marker_Genes,
+           path = "./R_output_files/Tables/Normal_High_Abundance_Genes_And_Marker_Genes.xlsx")
+
 
 ########################################## Comparison of TPM of significant genes
 ## Complementary analysis of a more absolute meassure rather relative gene expression
@@ -1582,7 +1712,35 @@ write_csv(
   file = "./R_intermediate_files/geneIDs.tsv"
 )
 
+## Export TPM genes with GO:0016757 glycosyltransferase activity (MF) annotation
+# Long format
+Glycosyltransferase_activity_genes_long <- BiomaRt_Annotationdbi_GO %>% 
+  dplyr::filter(go_id == "GO:0016757") %>% 
+  dplyr::filter(Gene_Detected == TRUE) %>% 
+  dplyr::inner_join(TPM_df, by = "GeneSymbol") %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  dplyr::select(GeneSymbol, ensembldb_ID, TPM, User_ID, go_id) %>% 
+  dplyr::distinct()
+
+write_xlsx(x = Glycosyltransferase_activity_genes_long,
+           path = "Glycosyltransferase_activity_genes_long.xlsx")
+
+# Short format
+Glycosyltransferase_activity_genes_wide <- BiomaRt_Annotationdbi_GO %>% 
+  dplyr::filter(go_id == "GO:0016757") %>% 
+  dplyr::filter(Gene_Detected == TRUE) %>% 
+  dplyr::inner_join(TPM_df, by = "GeneSymbol") %>% 
+  dplyr::filter(condition == "Non_Infected") %>% 
+  dplyr::select(GeneSymbol, ensembldb_ID, TPM, User_ID, go_id) %>% 
+  dplyr::distinct() %>% 
+  dplyr::mutate(User_ID = str_c(User_ID,"_TPM")) %>% 
+  pivot_wider(names_from = User_ID, values_from = TPM)
+
+write_xlsx(x = Glycosyltransferase_activity_genes_wide,
+           path = "Glycosyltransferase_activity_genes_wide.xlsx")
+
 ##################################################### Script finished
 sessionInfo()
 
 print("Script 2 finished")
+
