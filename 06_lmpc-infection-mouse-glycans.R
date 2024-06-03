@@ -74,14 +74,6 @@ plot_glycan_excel <- glycowork$motif$draw$plot_glycans_excel
 # Shorten the canonicalize_composition from glycowork
 canonicalize_composition <- glycowork$motif$processing$canonicalize_iupac
 
-get_pca <- glycowork$motif$analysis$get_pca
-
-get_heatmap <- glycowork$motif$analysis$get_heatmap
-
-get_differential_expression <- glycowork$motif$analysis$get_differential_expression
-
-get_volcano <- glycowork$motif$analysis$get_volcano
-
 ################################## Check existance of required directories
 if (!dir.exists("P26010")) {
   stop("You need the P26010 root folder in the same directory as the script")
@@ -355,19 +347,32 @@ Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input <- Glycan_Input_E
 write_xlsx(x = Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input,
            path = "./R_input_files/Glycan_Input.xlsx")
 
-########################################## Input df and canonicalize
-df_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Input.xlsx") %>% 
+########################################## Input df and canonicalize IUPAC condensed
+df_glycan_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Input.xlsx") %>% 
   mutate(Canonicalized_Structure = sapply(Structure, function (x) canonicalize_composition(x))) %>%  #Canonicalized structure according to glycoworks IUPAC condensed dialect
   relocate(Glycan_ID, Structure, Canonicalized_Structure)
 
-df_canonicalized <- df_canonicalized_all_data %>%
-  dplyr::select(Glycan_ID, Canonicalized_Structure) %>% 
+# Also summarise relative abundances
+df_glycan_canonicalized <- df_glycan_canonicalized_all_data %>%
+  group_by(Glycan_ID) %>% 
+  dplyr::mutate("Glycan_Mean_Relative_Abundance" = mean(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::mutate("Glycan_Standard_Deviation_Relative_Abundance" = sd(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::mutate("Glycan_Median_Relative_Abundance" = median(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::mutate("Glycan_Median_Absolute_Deviation_Relative_Abundance" = mad(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::select(Glycan_ID, 
+                Canonicalized_Structure, 
+                Structure, 
+                Glycan_Type, 
+                Glycan_Mean_Relative_Abundance, 
+                Glycan_Standard_Deviation_Relative_Abundance,
+                Glycan_Median_Relative_Abundance,
+                Glycan_Median_Absolute_Deviation_Relative_Abundance) %>% 
   distinct()
 
 ################################## Drawing glycans
 # Also works as quality control of structure strings
 # Canonicalize glycan structures
-df_glycodraw <- df_canonicalized %>% 
+df_glycodraw <- df_glycan_canonicalized %>% 
   dplyr::select(Glycan_ID,
                 Canonicalized_Structure) %>% 
   distinct() %>% 
@@ -400,104 +405,17 @@ glycan_structure_file_names <- list.files("./R_output_files/Glycan_SNFG/")
 # Missing files indicates formating errors that canonicalize failed to fix
 setdiff(str_replace_all(df_glycodraw$File_Name, "\\?", "_"), str_replace_all(glycan_structure_file_names, "\\?", "_"))
 
-# Draw pixel glycans in df_canonicalized to export this dataframe
-df_canonicalized_export <- df_canonicalized %>% 
-  dplyr::select(Canonicalized_Structure, Glycan_ID, Structure, everything()) # Place Canonicalized structure first
+# Draw pixel glycans in excel table format to get quick overview of glycans
+plot_glycan_excel(df_glycan_canonicalized,
+                  folder_filepath = file.path("./R_output_files/Glycan_SNFG"),
+                  glycan_col_num = as.integer(1))
 
-plot_glycan_excel(df_canonicalized_export,
-                  folder_filepath = file.path("./R_output_files/tables"),
-                  glycan_col_num = as.integer(0))
-
-canonicalized_structure_index <- which(colnames(df_canonicalized_export) == "Canonicalized_Structure")
-
-canonicalized_structure_index <- as.integer(1)
-
-str(canonicalized_structure_index)
-
-writexl::write_xlsx(x = df_canonicalized,
-                    path = ".R_output_files/tables/df_canonicalized.xlsx")
+writexl::write_xlsx(x = df_glycan_canonicalized,
+                    path = "./R_output_files/tables/df_glycan_canonicalized.xlsx")
 
 ################################## Differential glycomics
-# Dataframe for differential glycomics analysis
-differential_glycomics_infection_df <- df_canonicalized_all_data %>% 
-  dplyr::select(Canonicalized_Structure, Sample_ID, Glycan_Relative_Abundance_Percentage) %>% 
-  pivot_wider(names_from = Sample_ID, values_from = Glycan_Relative_Abundance_Percentage) %>% 
-  dplyr::rename("glycan" = Canonicalized_Structure)
-
-# Motif PCA
-groups_df <- df_canonicalized_all_data %>% 
-  dplyr::select(Sample_ID, Treatment_Group) %>% 
-  distinct() %>% 
-  dplyr::rename("id" = Sample_ID)
-
-get_pca(differential_glycomics_infection_df, 
-        motifs = TRUE, 
-        feature_set = c("known", "exhaustive", "terminal"),
-        groups = groups_df,
-        color = "Treatment_Group")
-
-# Heatmap from glycowork
-all_mouse_motif_heatmap <- df_canonicalized %>% 
-  dplyr::select(14:50) %>% 
-  pivot_longer(cols = 1:36) %>% 
-  pivot_wider(names_from = Canonicalized_Structure,
-              values_from = value) %>% 
-  column_to_rownames("name")
-
-get_heatmap(all_mouse_motif_heatmap, mode = "motif", feature_set = c("known", "exhaustive", "terminal"), filepath = "./output/all_mouse_motif_heatmap_all_motifs.pdf")
-
-get_heatmap(all_mouse_motif_heatmap, mode = "motif", feature_set = c("exhaustive"), filepath = "./output/all_mouse_motif_heatmap_exhaustive_motifs.pdf")
-
-get_heatmap(all_mouse_motif_heatmap, mode = "motif", feature_set = c("terminal"), filepath = "./output/all_mouse_motif_heatmap_terminal_motifs.pdf")
-
-# Testing get_differential_expression from glycoworks
-#glycans <- c('Man(a1-3)[Man(a1-6)][Xyl(b1-2)]Man(b1-4)GlcNAc(b1-4)[Fuc(a1-3)]GlcNAc',
-#             'Man(a1-2)Man(a1-2)Man(a1-3)[Man(a1-3)Man(a1-6)]Man(b1-4)GlcNAc(b1-4)GlcNAc',
-#             'GalNAc(a1-4)GlcNAcA(a1-4)[GlcN(b1-7)]Kdo(a2-5)[Kdo(a2-4)]Kdo(a2-6)GlcN4P(b1-6)GlcN4P',
-#             'Man(a1-2)Man(a1-3)[Man(a1-6)]Man(b1-4)GlcNAc(b1-4)GlcNAc',
-#             'Glc(b1-3)Glc(b1-3)Glc')
-
-#label <- c(3.234, 2.423, 0.733, 3.102, 0.108)
-#label2 <- c(2.952, 2.011, 0.456, 4.006, 0.0)
-#label3 <- c(3.88, 1.771, 0.811, 3.562, 0.073)
-#label4 <- c(0.134, 0.345, 1.15, 0.233, 2.981)
-#label5 <- c(0.334, 0.245, 1.55, 0.133, 2.581)
-#label6 <- c(0.234, 0.423, 1.733, 0.102, 2.108)
-
-#test_df <- tibble(glycans,
-#                  label,
-#                  label2,
-#                  label3,
-#                  label4,
-#                  label5,
-#                  label6)
-
-#res <- get_differential_expression(test_df, group1 = c("label","label2","label3"), group2 = c("label4","label5","label6"), motifs = TRUE, impute = TRUE)
-#res
-
-#get_volcano(res, filepath = "./output/test.eps")
-
-# Analyze infected vs non-infected
-infected_group <- sample_metadata %>% 
-  dplyr::filter(Treatment == "Vehicle") %>% 
-  dplyr::filter(Infection == "Infected") %>% 
-  dplyr::select(Sample) %>% 
-  deframe()
-
-uninfected_group <- sample_metadata %>% 
-  dplyr::filter(Treatment == "Vehicle") %>% 
-  dplyr::filter(Infection == "Uninfected") %>% 
-  dplyr::select(Sample) %>% 
-  deframe()
-
-res <- get_differential_expression(differential_glycomics_infection_df, 
-                                   group1 = infected_group, 
-                                   group2 = uninfected_group, 
-                                   motifs = TRUE, 
-                                   feature_set = c("known", "exhaustive", "terminal"),
-                                   impute = TRUE)
-res
-
+# Performed in jupyter notebook with the next script. 
+# This is done in python and not in R since I noticed issues running these parts of glycoworks with R/reticulate
 
 
 ########################################## SessionInfo
