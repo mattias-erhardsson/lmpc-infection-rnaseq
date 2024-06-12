@@ -60,7 +60,9 @@ lapply(
 # Python 3.11.7 installed in the environment
 # glycowork[all] v1.1.0 installed from anaconda terminal with pip inside environment 
 # https://github.com/BojarLab/glycowork
-reticulate::use_condaenv("base") # Using base environment for now instead of dedicated AnacondaGlycoworks environment
+#reticulate::use_condaenv("base") # Using base environment for now instead of dedicated AnacondaGlycoworks environment
+
+use_python("C:/Users/xerhma/AppData/Local/Programs/Python/Python312/python.exe")
 
 ################################## Glycoworks setup
 # Use the reticulate package to import the necessary Python modules
@@ -303,7 +305,8 @@ Glycan_Input_Excel_Processed_Long <- Glycan_Input_Excel_raw %>%
                              pad = "0")) %>% 
   dplyr::mutate(MS_File_Name = str_remove(MS_File_Name, "MS-File-Name-")) %>%  #Better readability
   dplyr::mutate(Sample_ID = str_remove(Sample_ID, "Sample-ID-")) %>%  #Better readability
-  dplyr::mutate(Treatment_Group = str_remove(Treatment_Group, "Treatment-Group-"))  #Better readability
+  dplyr::mutate(Treatment_Group = str_remove(Treatment_Group, "Treatment-Group-")) %>%   #Better readability
+  dplyr::mutate(Sample_ID = str_replace(Sample_ID, "-", "")) #Delete special character, creates issues downstream in glycowork
 print("Any NA-values in Data, indicating something in the initial data sanitation was missed?")
 nrow(Glycan_Input_Excel_Processed_Long %>% 
   dplyr::filter(is.na(Data))) != 0
@@ -347,18 +350,81 @@ Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input <- Glycan_Input_E
 write_xlsx(x = Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input,
            path = "./R_input_files/Glycan_Input.xlsx")
 
-########################################## Input df and canonicalize IUPAC condensed
+########################################## Import, process, quality control and export complete glycan data
 df_glycan_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Input.xlsx") %>% 
   mutate(Canonicalized_Structure = sapply(Structure, function (x) canonicalize_composition(x))) %>%  #Canonicalized structure according to glycoworks IUPAC condensed dialect
-  relocate(Glycan_ID, Structure, Canonicalized_Structure)
-
-# Also summarise relative abundances
-df_glycan_canonicalized <- df_glycan_canonicalized_all_data %>%
+  relocate(Glycan_ID, Structure, Canonicalized_Structure) %>%
   group_by(Glycan_ID) %>% 
   dplyr::mutate("Glycan_Mean_Relative_Abundance" = mean(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate("Glycan_Standard_Deviation_Relative_Abundance" = sd(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate("Glycan_Median_Relative_Abundance" = median(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate("Glycan_Median_Absolute_Deviation_Relative_Abundance" = mad(Glycan_Relative_Abundance_Percentage)) %>% 
+  ungroup()
+
+# QC
+# Any duplicate structures?
+df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure) %>% 
+  distinct() %>% 
+  dplyr::count(Canonicalized_Structure) %>% 
+  arrange(n) %>% 
+  dplyr::filter(n != 1)
+
+# Export
+write_xlsx(x = df_glycan_canonicalized_all_data,
+           path = "./R_output_files/tables/df_glycan_canonicalized_all_data.xlsx")
+################################## Processing and exporting glycan data for python glycoworks
+df_canonicalized_mouse_all <- df_glycan_canonicalized_all_data %>% 
+  dplyr::select(-c("MS_File_Name", 
+                   "Intensity", 
+                   "RetentionTime", 
+                   "DataComment",
+                   "Treatment_Group")) %>% 
+  pivot_wider(names_from = "Sample_ID",
+              values_from = "Glycan_Relative_Abundance_Percentage")
+write_tsv(x = df_canonicalized_mouse_all,
+          file = "./Python_input_files/df_canonicalized_mouse_all.tsv")
+
+df_canonicalized_mouse_minimal_glycan_col_all <- df_canonicalized_mouse_all %>% 
+  dplyr::select(Canonicalized_Structure, starts_with(c("H07", "H10"))) %>% 
+  pivot_longer(cols = starts_with(c("H07", "H10")),
+               names_to = "id",
+               values_to = "Glycan_Relative_Abundance_Percentage") %>% 
+  pivot_wider(names_from = "Canonicalized_Structure",
+              values_from = "Glycan_Relative_Abundance_Percentage")
+write_tsv(x = df_canonicalized_mouse_minimal_glycan_col_all,
+          file = "./Python_input_files/df_canonicalized_mouse_minimal_glycan_col_all.tsv")
+
+df_canonicalized_mouse_minimal_sample_col_all <- df_canonicalized_mouse_all %>% 
+  dplyr::select(Canonicalized_Structure, starts_with(c("H07", "H10"))) %>% 
+  dplyr::rename("glycan" = Canonicalized_Structure)
+write_tsv(x = df_canonicalized_mouse_minimal_sample_col_all,
+          file = "./Python_input_files/df_canonicalized_mouse_minimal_sample_col_all.tsv")
+
+mouse_sample_metadata_all <- df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Sample_ID, Treatment_Group) %>% 
+  distinct() %>% 
+  dplyr::rename("id" = Sample_ID) %>% 
+  dplyr::rename("Group" = Treatment_Group) %>% 
+  dplyr::mutate(Cohort = str_extract(id, "^..."))
+write_tsv(x = mouse_sample_metadata_all,
+          file = "./Python_input_files/mouse_sample_metadata_all.tsv")
+
+mouse_infected_vehicle_sample_names <-mouse_sample_metadata_all %>% 
+  dplyr::filter(Group == "HpyloriInfected") %>% 
+  dplyr::select("id")
+write_tsv(x = mouse_infected_vehicle_sample_names,
+          file = "./Python_input_files/mouse_infected_vehicle_sample_names.tsv")
+
+mouse_uninfected_vehicle_sample_names <-mouse_sample_metadata_all %>% 
+  dplyr::filter(Group == "ShamInfected") %>% 
+  dplyr::select("id")
+write_tsv(x = mouse_uninfected_vehicle_sample_names,
+          file = "./Python_input_files/mouse_uninfected_vehicle_sample_names.tsv")
+
+################################## Drawing glycans
+# Creating df
+df_glycan_canonicalized <- df_glycan_canonicalized_all_data %>% 
   dplyr::select(Glycan_ID, 
                 Canonicalized_Structure, 
                 Structure, 
@@ -369,7 +435,6 @@ df_glycan_canonicalized <- df_glycan_canonicalized_all_data %>%
                 Glycan_Median_Absolute_Deviation_Relative_Abundance) %>% 
   distinct()
 
-################################## Drawing glycans
 # Also works as quality control of structure strings
 # Canonicalize glycan structures
 df_glycodraw <- df_glycan_canonicalized %>% 
@@ -422,3 +487,4 @@ writexl::write_xlsx(x = df_glycan_canonicalized,
 sessionInfo()
 
 print("Script 6 finished")
+
