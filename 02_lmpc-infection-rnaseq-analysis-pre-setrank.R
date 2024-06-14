@@ -394,6 +394,7 @@ PCA <- ggplot(df, aes(
   y = PC2,
   color = condition
 )) +
+  scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
   geom_label(aes(label = User_ID),
              size = 2) +
   labs(
@@ -481,6 +482,7 @@ UMAP_Plot <- ggplot(
     color = condition
   )
 ) +
+  scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
   # geom_point() +
   geom_label(aes(label = User_ID),
              size = 2) +
