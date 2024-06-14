@@ -69,9 +69,9 @@ use_python("C:/Users/xerhma/AppData/Local/Programs/Python/Python312/python.exe")
 glycowork <- import("glycowork")
 
 # Shorten glycoDraw function from glycowork
-GlycoDraw <- glycowork$motif$draw$GlycoDraw
+#GlycoDraw <- glycowork$motif$draw$GlycoDraw
 
-plot_glycan_excel <- glycowork$motif$draw$plot_glycans_excel
+#plot_glycan_excel <- glycowork$motif$draw$plot_glycans_excel
 
 # Shorten the canonicalize_composition from glycowork
 canonicalize_composition <- glycowork$motif$processing$canonicalize_iupac
@@ -422,63 +422,7 @@ mouse_uninfected_vehicle_sample_names <-mouse_sample_metadata_all %>%
 write_tsv(x = mouse_uninfected_vehicle_sample_names,
           file = "./Python_input_files/mouse_uninfected_vehicle_sample_names.tsv")
 
-################################## Drawing glycans
-# Creating df
-df_glycan_canonicalized <- df_glycan_canonicalized_all_data %>% 
-  dplyr::select(Glycan_ID, 
-                Canonicalized_Structure, 
-                Structure, 
-                Glycan_Type, 
-                Glycan_Mean_Relative_Abundance, 
-                Glycan_Standard_Deviation_Relative_Abundance,
-                Glycan_Median_Relative_Abundance,
-                Glycan_Median_Absolute_Deviation_Relative_Abundance) %>% 
-  distinct()
-
-# Also works as quality control of structure strings
-# Canonicalize glycan structures
-df_glycodraw <- df_glycan_canonicalized %>% 
-  dplyr::select(Glycan_ID,
-                Canonicalized_Structure) %>% 
-  distinct() %>% 
-  unite("File_Name",
-        1:2,
-        remove = FALSE) %>% 
-  mutate(File_Name = str_replace(File_Name,
-                                 "$",
-                                 ".pdf")) %>% 
-  mutate(File_Path = str_replace(File_Name,
-                                 "^",
-                                 "./R_output_files/Glycan_SNFG/"))
-
-# Draw glycans and save files
-for (row in seq_len(nrow(df_glycodraw))) {
-  
-  file_path <- file.path(df_glycodraw[[row, "File_Path"]])
-  
-  glycan_structure <- df_glycodraw[[row, "Canonicalized_Structure"]]
-  
-  # Call GlycoDraw function to draw the glycan structure and save it to SVG file
-  GlycoDraw(glycan_structure, filepath = file_path, show_linkage = TRUE)
-}
-
-# Check if any glycans failed to draw
-# Get created file names
-glycan_structure_file_names <- list.files("./R_output_files/Glycan_SNFG/")
-
-# Compare whats missing from expected file names
-# Missing files indicates formating errors that canonicalize failed to fix
-setdiff(str_replace_all(df_glycodraw$File_Name, "\\?", "_"), str_replace_all(glycan_structure_file_names, "\\?", "_"))
-
-# Draw pixel glycans in excel table format to get quick overview of glycans
-plot_glycan_excel(df_glycan_canonicalized,
-                  folder_filepath = file.path("./R_output_files/Glycan_SNFG"),
-                  glycan_col_num = as.integer(1))
-
-writexl::write_xlsx(x = df_glycan_canonicalized,
-                    path = "./R_output_files/tables/df_glycan_canonicalized.xlsx")
-
-################################## Differential glycomics
+################################## Glycomics analysis
 # Performed in jupyter notebook with the next script. 
 # This is done in python and not in R since I noticed issues running these parts of glycoworks with R/reticulate
 
