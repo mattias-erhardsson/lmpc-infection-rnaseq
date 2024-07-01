@@ -630,7 +630,15 @@ Volcano_Plot <- ggplot(
 print(Volcano_Plot)
 
 ggsave(
-  filename = "./R_output_files/Figures/Volcano_Plot_Differential_Gene_Expression_Infection.eps",
+  filename = "./R_output_files/Figures/Volcano_Plot_Differential_Gene_Expression_Infection.svg",
+  plot = Volcano_Plot,
+  width = 2226,
+  height = 1205,
+  units = "px"
+)
+
+ggsave(
+  filename = "./R_output_files/Figures/Volcano_Plot_Differential_Gene_Expression_Infection.pdf",
   plot = Volcano_Plot,
   width = 2226,
   height = 1205,
