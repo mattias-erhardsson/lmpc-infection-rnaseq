@@ -10,6 +10,9 @@ renv::restore()
 renv::install("readxl@1.4.3", prompt = FALSE)
 renv::install("reticulate@1.35.0", prompt = FALSE)
 
+renv::install("viridis")
+renv::install("pheatmap")
+
 ################################## Load packages
 lapply(
   c(
@@ -48,7 +51,8 @@ lapply(
     "igraph", # For RCy3/cytoscape
     "viridis", # Color palette
     "readxl", # Loading excel files
-    "reticulate" # Using python in R
+    "reticulate", # Using python in R
+    "pheatmap" # Heatmaps
   ),
   library,
   character.only = TRUE
@@ -62,7 +66,8 @@ lapply(
 # https://github.com/BojarLab/glycowork
 #reticulate::use_condaenv("base") # Using base environment for now instead of dedicated AnacondaGlycoworks environment
 
-use_python("C:/Users/xerhma/AppData/Local/Programs/Python/Python312/python.exe")
+use_python("C:/Users/xerhma/AppData/Local/Programs/Python/Python312/python.exe") # Change to what you use
+#use_python("C:/Users/Mattias Erhardsson/AppData/Local/Programs/Python/Python312/python.exe") # Depends on what computer I use
 
 ################################## Glycoworks setup
 # Use the reticulate package to import the necessary Python modules
@@ -359,7 +364,11 @@ df_glycan_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Inp
   dplyr::mutate("Glycan_Standard_Deviation_Relative_Abundance" = sd(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate("Glycan_Median_Relative_Abundance" = median(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate("Glycan_Median_Absolute_Deviation_Relative_Abundance" = mad(Glycan_Relative_Abundance_Percentage)) %>% 
-  ungroup()
+  dplyr::ungroup() %>% 
+  dplyr::group_by(Glycan_ID, Sample_ID) %>% 
+  dplyr::mutate("Glycan_Size" = sum(Hex, HexNAc, Fucose, Neu5Ac, Neu5Gc, Sulf)) %>%  # Calculate glycan size, defined as the sum of monosackarides + sulfate
+  dplyr::ungroup() %>% 
+  dplyr::mutate(Cohort = str_extract(Sample_ID, "^..."))
 
 # QC
 # Any duplicate structures?
@@ -373,6 +382,7 @@ df_glycan_canonicalized_all_data %>%
 # Export
 write_xlsx(x = df_glycan_canonicalized_all_data,
            path = "./R_output_files/tables/df_glycan_canonicalized_all_data.xlsx")
+
 ################################## Processing and exporting glycan data for python glycoworks
 df_canonicalized_mouse_all <- df_glycan_canonicalized_all_data %>% 
   dplyr::select(-c("MS_File_Name", 
@@ -423,9 +433,147 @@ write_tsv(x = mouse_uninfected_vehicle_sample_names,
           file = "./Python_input_files/mouse_uninfected_vehicle_sample_names.tsv")
 
 ################################## Glycomics analysis
-# Performed in jupyter notebook with the next script. 
-# This is done in python and not in R since I noticed issues running these parts of glycoworks with R/reticulate
+# Most performed in jupyter notebook with the help of glycowork with the next script, but some parts are easier to do here. 
+# Glycowork is done in python and not in R since I noticed issues running these parts of glycowork with R/reticulate
 
+# Analyse glycan size and monosackaride distribution
+# Do this by combining glycan relative abundances for all glycans of the same size
+# Glycan size is defined as the sum of all monosackarides + sulfate
+df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
+  dplyr::group_by(Glycan_Size, Sample_ID) %>% 
+  dplyr::mutate("Glycan_Size_Relative_Abundance_Percentage" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(Glycan_ID, 
+                Structure, 
+                Canonicalized_Structure, 
+                Glycan_Size, 
+                Hex, 
+                HexNAc, 
+                Fucose, 
+                Neu5Ac, 
+                Neu5Gc, 
+                Sulf, 
+                Sample_ID, 
+                Treatment_Group, 
+                Cohort, 
+                Glycan_Size_Relative_Abundance_Percentage, 
+                Glycan_Relative_Abundance_Percentage)
+
+## Glycan size heatmap
+# Transform data to wide format
+df_r_glycan_size_wide <- df_r_glycomics %>%
+  dplyr::select(Sample_ID,
+                Glycan_Size_Relative_Abundance_Percentage,
+                Glycan_Size) %>% 
+  dplyr::distinct() %>% 
+  tidyr::pivot_wider(names_from = Sample_ID, values_from = Glycan_Size_Relative_Abundance_Percentage) %>%
+  tibble::column_to_rownames("Glycan_Size")
+
+# Extract annotations
+annotations <- df_r_glycomics %>%
+  dplyr::select(Sample_ID, Treatment_Group, Cohort) %>%
+  dplyr::distinct() %>%
+  tibble::column_to_rownames("Sample_ID")
+
+# Define custom colors for annotations
+ann_colors <- list(
+  Treatment_Group = c(ShamInfected = "#4DC36B", HpyloriInfected = "#440C55"),
+  Cohort = c(H07 = "#E85311", H10 = "#15B8E9")
+)
+
+# Create the heatmap with clustering and annotations
+Glycan_Size_Heatmap <- pheatmap(
+  df_r_glycan_size_wide,
+  cluster_rows = FALSE,
+  cluster_cols = TRUE,
+  annotation_col = annotations,
+  annotation_colors = ann_colors,
+  color = viridis::viridis(100),
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  main = "Glycan size heatmap"
+)
+print(Glycan_Size_Heatmap)
+
+ggsave(filename = "./R_output_files/Figures/Glycan_Size_Heatmap.pdf",
+       plot = Glycan_Size_Heatmap)
+
+## Monosackaride heatmap
+# Transform data to wide format
+df_r_reside_wide <- df_r_glycomics %>%
+  dplyr::select(Sample_ID,
+                Hex, 
+                HexNAc, 
+                Fucose, 
+                Neu5Ac, 
+                Neu5Gc, 
+                Sulf,
+                Glycan_Relative_Abundance_Percentage,
+                Glycan_ID,
+                Glycan_Size) %>% 
+  dplyr::distinct() %>% 
+  tidyr::pivot_longer(c(Hex, 
+                        HexNAc, 
+                        Fucose, 
+                        Neu5Ac, 
+                        Neu5Gc, 
+                        Sulf),
+                      names_to = "Residue",
+                      values_to = "Residues_In_Glycan") %>% 
+  dplyr::mutate("Residue_Glycan_Relative_Abundance_Percentage" = (Glycan_Relative_Abundance_Percentage * Residues_In_Glycan) / Glycan_Size) %>%  # Gets the % that each residue makes up of each glycan in each sample
+  dplyr::group_by(Sample_ID, Residue) %>%
+  dplyr::mutate("Residue_Relative_Abundance_Percentage" = sum(Residue_Glycan_Relative_Abundance_Percentage) / length(unique(df_r_glycomics$Glycan_ID)) * 100) %>% # Gets the % that each residue makes up in each sample
+  dplyr::select(Sample_ID,
+                Residue_Relative_Abundance_Percentage,
+                Residue) %>% 
+  dplyr::distinct() %>% 
+  tidyr::pivot_wider(names_from = Sample_ID, values_from = Residue_Relative_Abundance_Percentage) %>%
+  tibble::column_to_rownames("Residue")
+
+# Create the heatmap with clustering and annotations
+Residue_Heatmap <- pheatmap(
+  df_r_reside_wide,
+  cluster_rows = FALSE,
+  cluster_cols = TRUE,
+  annotation_col = annotations,
+  annotation_colors = ann_colors,
+  color = viridis::viridis(100),
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  main = "Glycan size heatmap"
+)
+print(Residue_Heatmap)
+
+ggsave(filename = "./R_output_files/Figures/Residue_Heatmap.pdf",
+       plot = Residue_Heatmap)
+
+# The heatmap suggests heavy fucosylation, lets quantify it and the other residues
+Residue_Statistics_Table <- df_r_reside_wide %>%
+  tibble::rownames_to_column("Residue") %>% 
+  tidyr::pivot_longer(starts_with("H"), values_to = "Residue_Relative_Abundance_Percentage", names_to = "Sample_ID") %>% 
+  dplyr::group_by(Residue) %>% 
+  dplyr::mutate(Mean_Residue_Relative_Abundance_Percentage = mean(Residue_Relative_Abundance_Percentage)) %>% 
+  dplyr::mutate(SD_Residue_Relative_Abundance_Percentage = sd(Residue_Relative_Abundance_Percentage)) %>% 
+  dplyr::select(Residue, Mean_Residue_Relative_Abundance_Percentage, SD_Residue_Relative_Abundance_Percentage) %>% 
+  dplyr::distinct()
+print(Residue_Statistics_Table)
+write_xlsx(x = Residue_Statistics_Table,
+           path = "./R_output_files/Tables/Residue_Statistics_Table.xlsx")
+
+# And check fucosylated vs non-fucosylated structures for proportion of relative abundance
+Fucosylation_Statistics_Table <- df_r_glycomics %>% 
+  dplyr::select(Glycan_ID, Fucose, Glycan_Relative_Abundance_Percentage, Sample_ID) %>%
+  dplyr::mutate("Fucosylated" = Fucose > 0) %>% 
+  dplyr::mutate("Summed_Glycan_Relative_Abundance" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::group_by(Fucosylated) %>% 
+  dplyr::mutate("Summed_Fucosylation_Glycan_Relative_Abundance" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::select(Fucosylated, Summed_Fucosylation_Glycan_Relative_Abundance, Summed_Glycan_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::mutate("Percentage_Of_Glycan_Relative_Abundace_That_Is_Fucosylated" = (Summed_Fucosylation_Glycan_Relative_Abundance / Summed_Glycan_Relative_Abundance) * 100) %>% 
+  dplyr::select(Fucosylated, Percentage_Of_Glycan_Relative_Abundace_That_Is_Fucosylated)
+print(Fucosylation_Statistics_Table)
+write_xlsx(x = Fucosylation_Statistics_Table,
+           path = "./R_output_files/Tables/Fucosylation_Statistics_Table.xlsx")
 
 ########################################## SessionInfo
 sessionInfo()
