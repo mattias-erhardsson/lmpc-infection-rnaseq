@@ -7,11 +7,11 @@ set.seed(1337)
 ################################## Install packages
 renv::restore()
 
-renv::install("readxl@1.4.3", prompt = FALSE)
-renv::install("reticulate@1.35.0", prompt = FALSE)
+#renv::install("readxl@1.4.3", prompt = FALSE)
+#renv::install("reticulate@1.35.0", prompt = FALSE)
 
-renv::install("viridis")
-renv::install("pheatmap")
+#renv::install("viridis")
+#renv::install("pheatmap")
 
 ################################## Load packages
 lapply(
@@ -20,8 +20,8 @@ lapply(
     "BiocManager", # For project management
     "plyr", # Data wrangling, part of tidyverse but not automatically loaded with it. Always load plyr before dply to avoid known issues # nolint: error. # nolint
     "ggplot2", # Tidyverse. Data wrangling, processing and presentation.
-    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "tidyr", # Tidyverse. Data wrangling, processing and presentation.
+    "dplyr", # Tidyverse. Data wrangling, processing and presentation.
     "readr", # Tidyverse. Data wrangling, processing and presentation.
     "purrr", # Tidyverse. Data wrangling, processing and presentation.
     "tibble", # Tidyverse. Data wrangling, processing and presentation.
@@ -52,7 +52,8 @@ lapply(
     "viridis", # Color palette
     "readxl", # Loading excel files
     "reticulate", # Using python in R
-    "pheatmap" # Heatmaps
+    "pheatmap", # Heatmaps
+    "viridis" # Color blind friendly color scales
   ),
   library,
   character.only = TRUE
@@ -389,7 +390,9 @@ df_canonicalized_mouse_all <- df_glycan_canonicalized_all_data %>%
                    "Intensity", 
                    "RetentionTime", 
                    "DataComment",
-                   "Treatment_Group")) %>% 
+                   "Treatment_Group",
+                   "Cohort"
+                   )) %>% 
   pivot_wider(names_from = "Sample_ID",
               values_from = "Glycan_Relative_Abundance_Percentage")
 write_tsv(x = df_canonicalized_mouse_all,
@@ -497,6 +500,8 @@ print(Glycan_Size_Heatmap)
 
 ggsave(filename = "./R_output_files/Figures/Glycan_Size_Heatmap.pdf",
        plot = Glycan_Size_Heatmap)
+ggsave(filename = "./R_output_files/Figures/Glycan_Size_Heatmap.svg",
+       plot = Glycan_Size_Heatmap)
 
 ## Monosackaride heatmap
 # Transform data to wide format
@@ -518,20 +523,20 @@ df_r_reside_wide <- df_r_glycomics %>%
                         Neu5Ac, 
                         Neu5Gc, 
                         Sulf),
-                      names_to = "Residue",
-                      values_to = "Residues_In_Glycan") %>% 
-  dplyr::mutate("Residue_Glycan_Relative_Abundance_Percentage" = (Glycan_Relative_Abundance_Percentage * Residues_In_Glycan) / Glycan_Size) %>%  # Gets the % that each residue makes up of each glycan in each sample
-  dplyr::group_by(Sample_ID, Residue) %>%
-  dplyr::mutate("Residue_Relative_Abundance_Percentage" = sum(Residue_Glycan_Relative_Abundance_Percentage) / length(unique(df_r_glycomics$Glycan_ID)) * 100) %>% # Gets the % that each residue makes up in each sample
+                      names_to = "Moiety",
+                      values_to = "Moietys_In_Glycan") %>% 
+  dplyr::mutate("Moiety_Glycan_Relative_Abundance_Percentage" = (Glycan_Relative_Abundance_Percentage * Moietys_In_Glycan) / Glycan_Size) %>%  # Gets the % that each moiety makes up of each glycan in each sample
+  dplyr::group_by(Sample_ID, Moiety) %>%
+  dplyr::mutate("Moiety_Relative_Abundance_Percentage" = sum(Moiety_Glycan_Relative_Abundance_Percentage) / length(unique(df_r_glycomics$Glycan_ID)) * 100) %>% # Gets the % that each moiety makes up in each sample
   dplyr::select(Sample_ID,
-                Residue_Relative_Abundance_Percentage,
-                Residue) %>% 
+                Moiety_Relative_Abundance_Percentage,
+                Moiety) %>% 
   dplyr::distinct() %>% 
-  tidyr::pivot_wider(names_from = Sample_ID, values_from = Residue_Relative_Abundance_Percentage) %>%
-  tibble::column_to_rownames("Residue")
+  tidyr::pivot_wider(names_from = Sample_ID, values_from = Moiety_Relative_Abundance_Percentage) %>%
+  tibble::column_to_rownames("Moiety")
 
 # Create the heatmap with clustering and annotations
-Residue_Heatmap <- pheatmap(
+Moiety_Heatmap <- pheatmap(
   df_r_reside_wide,
   cluster_rows = FALSE,
   cluster_cols = TRUE,
@@ -540,25 +545,27 @@ Residue_Heatmap <- pheatmap(
   color = viridis::viridis(100),
   show_colnames = TRUE,
   show_rownames = TRUE,
-  main = "Glycan size heatmap"
+  main = "Moiety heatmap"
 )
-print(Residue_Heatmap)
+print(Moiety_Heatmap)
 
-ggsave(filename = "./R_output_files/Figures/Residue_Heatmap.pdf",
-       plot = Residue_Heatmap)
+ggsave(filename = "./R_output_files/Figures/Moiety_Heatmap.pdf",
+       plot = Moiety_Heatmap)
+ggsave(filename = "./R_output_files/Figures/Moiety_Heatmap.svg",
+       plot = Moiety_Heatmap)
 
-# The heatmap suggests heavy fucosylation, lets quantify it and the other residues
-Residue_Statistics_Table <- df_r_reside_wide %>%
-  tibble::rownames_to_column("Residue") %>% 
-  tidyr::pivot_longer(starts_with("H"), values_to = "Residue_Relative_Abundance_Percentage", names_to = "Sample_ID") %>% 
-  dplyr::group_by(Residue) %>% 
-  dplyr::mutate(Mean_Residue_Relative_Abundance_Percentage = mean(Residue_Relative_Abundance_Percentage)) %>% 
-  dplyr::mutate(SD_Residue_Relative_Abundance_Percentage = sd(Residue_Relative_Abundance_Percentage)) %>% 
-  dplyr::select(Residue, Mean_Residue_Relative_Abundance_Percentage, SD_Residue_Relative_Abundance_Percentage) %>% 
+# The heatmap suggests heavy fucosylation, lets quantify it and the other moietys
+Moiety_Statistics_Table <- df_r_reside_wide %>%
+  tibble::rownames_to_column("Moiety") %>% 
+  tidyr::pivot_longer(starts_with("H"), values_to = "Moiety_Relative_Abundance_Percentage", names_to = "Sample_ID") %>% 
+  dplyr::group_by(Moiety) %>% 
+  dplyr::mutate(Mean_Moiety_Relative_Abundance_Percentage = mean(Moiety_Relative_Abundance_Percentage)) %>% 
+  dplyr::mutate(SD_Moiety_Relative_Abundance_Percentage = sd(Moiety_Relative_Abundance_Percentage)) %>% 
+  dplyr::select(Moiety, Mean_Moiety_Relative_Abundance_Percentage, SD_Moiety_Relative_Abundance_Percentage) %>% 
   dplyr::distinct()
-print(Residue_Statistics_Table)
-write_xlsx(x = Residue_Statistics_Table,
-           path = "./R_output_files/Tables/Residue_Statistics_Table.xlsx")
+print(Moiety_Statistics_Table)
+write_xlsx(x = Moiety_Statistics_Table,
+           path = "./R_output_files/Tables/Moiety_Statistics_Table.xlsx")
 
 # And check fucosylated vs non-fucosylated structures for proportion of relative abundance
 Fucosylation_Statistics_Table <- df_r_glycomics %>% 
