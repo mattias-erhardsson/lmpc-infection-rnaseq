@@ -30,9 +30,12 @@ renv::install("stringr@1.5.0", prompt = FALSE)
 renv::install("vroom@1.6.3", prompt = FALSE)
 renv::install("svglite@2.1.1", prompt = FALSE)
 renv::install("writexl@1.4.2", prompt = FALSE)
+renv::install("readxl@1.4.3", prompt = FALSE)
 renv::install("styler@1.10.1", prompt = FALSE)
-renv::install("viridis@0.6.4", prompt = FALSE)
+renv::install("viridis@0.6.5", prompt = FALSE)
 renv::install("BiocManager@1.30.22", prompt = FALSE)
+renv::install("reticulate@1.35.0", prompt = FALSE)
+renv::install("pheatmap@1.0.12", prompt = FALSE)
 
 # Then Bioconductor packages
 renv::install("bioc::DESeq2", prompt = FALSE)
@@ -101,11 +104,16 @@ lapply(
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
     "igraph", # For RCy3/cytoscape
-    "viridis" # Color palette
+    "viridis", # Color palette
+    "readxl", # Loading excel files
+    "reticulate", # Using python in R
+    "pheatmap" # Heatmaps
   ),
   library,
   character.only = TRUE
 )
+
+#renv::snapshot()
 
 ##################################################### Script finished
 sessionInfo()

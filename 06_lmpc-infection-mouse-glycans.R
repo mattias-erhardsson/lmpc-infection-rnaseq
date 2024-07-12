@@ -52,8 +52,7 @@ lapply(
     "viridis", # Color palette
     "readxl", # Loading excel files
     "reticulate", # Using python in R
-    "pheatmap", # Heatmaps
-    "viridis" # Color blind friendly color scales
+    "pheatmap" # Heatmaps
   ),
   library,
   character.only = TRUE

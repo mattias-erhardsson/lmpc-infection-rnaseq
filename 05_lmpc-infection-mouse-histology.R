@@ -118,8 +118,6 @@ Bacteria_pvalue <- wilcox.test(x = Histology_Data %>%
                                exact = FALSE)[["p.value"]]
 print(Bacteria_pvalue)
 
-p.adjust(p = )
-
 Histological_Assay_Tests <- tibble(assay = c("HAI", 
                                              "Bacteria"),
                                    pvalue = c(HAI_pvalue, 
