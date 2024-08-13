@@ -1,19 +1,19 @@
-User_ID	Sectioning iteration	condition	Extracted_area_with_10_micrometer_thick_sections	Tapestation_RIN_Value	Tapestation_RNA_concentration_ng_ul	Date_harvested	Date_sectioned	Days_between_harvest_and_sectioning	SciLifeLab_RIN_Value	DV200	SciLifeLab_RNA_concentration_ng_ul	SciLifeLab_RNA_amount_ng
-H9_01	1	Non_Infected	6048468	5.6	7.390	2022-04-09	2022-04-15	6	5.70	95.70	14.29	128.58
-H9_02	1	Non_Infected	5597815	7.2	4.690	2022-04-09	2022-04-15	6	6.50	96.50	9.79	68.56
-H9_03	1	Non_Infected	4361522	7.2	8.400	2022-04-09	2022-04-17	8	6.50	96.50	12.62	113.55
-H9_04	1	Non_Infected	3018515	7.0	4.180	2022-04-09	2022-04-17	8	6.60	96.30	6.21	55.92
-H9_05	1	Non_Infected	4567070	6.2	1.810	2022-04-09	2022-04-17	8	6.30	95.50	6.76	60.86
-H9_06	1	Infected	4013135	6.4	4.270	2022-04-09	2022-04-17	8	3.60	93.60	6.22	56.01
-H9_07	1	Infected	1678071	5.2	2.450	2022-04-09	2022-04-18	9	3.70	92.90	3.13	28.18
-H9_08	1	Infected	2263535	7.1	2.550	2022-04-09	2022-04-18	9	2.30	90.90	3.38	28.75
-H9_09	1	Infected	2298780	6.4	2.270	2022-04-09	2022-04-18	9	5.50	95.40	1.86	16.71
-H9_10	1	Infected	2335934	6.3	2.270	2022-04-09	2022-04-18	9	3.50	85.20	2.39	21.48
-H9_11	1	R_Alpha		3.6	1.810	2022-04-09	2022-04-28	19	3.70	92.90	1.74	15.67
-H9_11	2	R_Alpha	2872209	6.9	0.566	2022-04-09	2022-05-01	22	3.70	92.90	1.74	15.67
-H9_11	3	R_Alpha	2702744	4.1	0.771	2022-04-09	2022-05-02	23	3.70	92.90	1.74	15.67
-H9_12	1	R_Alpha	2073702	5.0	1.590	2022-04-09	2022-04-28	19	3.10	92	1.76	15.83
-H9_12	3	R_Alpha	2045966	8.0	1.190	2022-04-09	2022-05-02	23	3.10	92	1.76	15.83
-H9_13	2	R_Alpha	2210705	6.0	1.160	2022-04-09	2022-05-02	23	4.10	93.60	1.35	12.13
-H9_14	2	R_Alpha	1938741	5.9	2.150	2022-04-09	2022-05-02	23	2.60	90.90	2.08	18.76
-H9_15	2	R_Alpha	1958240	6.2	1.940	2022-04-09	2022-05-05	26	2.90	92.20	2.27	20.43
+User_ID	Sectioning iteration	condition	Extracted_area_with_10_micrometer_thick_sections	Tapestation_RIN_Value	Tapestation_RNA_concentration_ng_ul	Date_harvested	Date_sectioned	Days_between_harvest_and_sectioning	SciLifeLab_RIN_Value	DV200	SciLifeLab_RNA_concentration_ng_ul	SciLifeLab_RNA_amount_ng	Sequenced
+H9_01	1	Non_Infected	6048468	5.6	7.390	2022-04-09	2022-04-15	6	5.70	95.70	14.29	128.58	TRUE
+H9_02	1	Non_Infected	5597815	7.2	4.690	2022-04-09	2022-04-15	6	6.50	96.50	9.79	68.56	TRUE
+H9_03	1	Non_Infected	4361522	7.2	8.400	2022-04-09	2022-04-17	8	6.50	96.50	12.62	113.55	TRUE
+H9_04	1	Non_Infected	3018515	7.0	4.180	2022-04-09	2022-04-17	8	6.60	96.30	6.21	55.92	TRUE
+H9_05	1	Non_Infected	4567070	6.2	1.810	2022-04-09	2022-04-17	8	6.30	95.50	6.76	60.86	TRUE
+H9_06	1	Infected	4013135	6.4	4.270	2022-04-09	2022-04-17	8	3.60	93.60	6.22	56.01	TRUE
+H9_07	1	Infected	1678071	5.2	2.450	2022-04-09	2022-04-18	9	3.70	92.90	3.13	28.18	TRUE
+H9_08	1	Infected	2263535	7.1	2.550	2022-04-09	2022-04-18	9	2.30	90.90	3.38	28.75	FALSE
+H9_09	1	Infected	2298780	6.4	2.270	2022-04-09	2022-04-18	9	5.50	95.40	1.86	16.71	TRUE
+H9_10	1	Infected	2335934	6.3	2.270	2022-04-09	2022-04-18	9	3.50	85.20	2.39	21.48	TRUE
+													
+													
+													
+													
+													
+													
+													
+													

@@ -43,7 +43,8 @@ lapply(
     "RCy3", # For cytoscape programmatic analysis
     "STRINGdb", # For STRING database annotation
     "igraph", # For RCy3/cytoscape
-    "viridis" # Color palette
+    "viridis", # Color palette
+    "readxl" # Loading excel files
   ),
   library,
   character.only = TRUE
@@ -91,9 +92,27 @@ if (!dir.exists("./R_output_files/Tables")) {
 }
 
 ################################## Data import
-Histology_Data <- read_tsv(file = "./R_input_files/Histology_Data.tsv")
+Histology_Raw_Data <- read_xlsx(path = "./R_input_files/Histology_Data.xlsx",
+                                col_types = c("text",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "numeric",
+                                             "text",
+                                             "text",
+                                             "logical",
+                                             "text"))
 
 ################################## Plot histology data
+# Select the samples used for RNAseq
+Histology_Data <- Histology_Raw_Data %>% 
+  dplyr::filter(Cohort == "H09")
+
 #Statistical test of histological assays with fdr adjustment
 
 HAI_pvalue <- wilcox.test(x = Histology_Data %>%
@@ -129,6 +148,7 @@ HAI_Total_Plot <- ggplot(Histology_Data,
        aes(x = condition,
            y = HAI_Total,
            color = condition)) +
+  scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
   geom_jitter(width = 0.1, height = 0) +
   scale_y_continuous(breaks = 0:24) +
   theme_bw() +

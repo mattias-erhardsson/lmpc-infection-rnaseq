@@ -221,10 +221,13 @@ LMPC_RNA_Plot <- ggplot(
   LMPC_RNA_Data,
   aes(
     x = Extracted_area_with_10_micrometer_thick_sections,
-    y = SciLifeLab_RNA_amount_ng
+    y = SciLifeLab_RNA_amount_ng,
+    color = condition,
+    shape = Sequenced
   )
 ) +
   geom_point() +
+  scale_color_manual(values = c("Non_Infected" = "#4BC26C", "Infected" = "#440D54")) +
   geom_hline(yintercept = 10) +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   expand_limits(y = 0, x = 0) +

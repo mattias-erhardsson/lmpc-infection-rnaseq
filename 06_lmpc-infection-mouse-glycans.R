@@ -366,7 +366,7 @@ df_glycan_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Inp
   dplyr::mutate("Glycan_Median_Absolute_Deviation_Relative_Abundance" = mad(Glycan_Relative_Abundance_Percentage)) %>% 
   dplyr::ungroup() %>% 
   dplyr::group_by(Glycan_ID, Sample_ID) %>% 
-  dplyr::mutate("Glycan_Size" = sum(Hex, HexNAc, Fucose, Neu5Ac, Neu5Gc, Sulf)) %>%  # Calculate glycan size, defined as the sum of monosackarides + sulfate
+  dplyr::mutate("Glycan_Size" = sum(Hex, HexNAc, Fucose, Neu5Ac, Neu5Gc)) %>%  # Calculate glycan size, defined as the sum of monosackarides (i.e., not including sulfate)
   dplyr::ungroup() %>% 
   dplyr::mutate(Cohort = str_extract(Sample_ID, "^..."))
 
@@ -440,7 +440,7 @@ write_tsv(x = mouse_uninfected_vehicle_sample_names,
 
 # Analyse glycan size and monosackaride distribution
 # Do this by combining glycan relative abundances for all glycans of the same size
-# Glycan size is defined as the sum of all monosackarides + sulfate
+# Glycan size is defined as the sum of all monosackarides (i.e., not including sulfate)
 df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
   dplyr::group_by(Glycan_Size, Sample_ID) %>% 
   dplyr::mutate("Glycan_Size_Relative_Abundance_Percentage" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
