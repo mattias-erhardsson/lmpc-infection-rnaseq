@@ -94,6 +94,7 @@ if (!dir.exists("./R_output_files/Tables")) {
 ################################## Data import
 Histology_Raw_Data <- read_xlsx(path = "./R_input_files/Histology_Data.xlsx",
                                 col_types = c("text",
+                                              "text",
                                              "numeric",
                                              "numeric",
                                              "numeric",
@@ -109,9 +110,9 @@ Histology_Raw_Data <- read_xlsx(path = "./R_input_files/Histology_Data.xlsx",
                                              "text"))
 
 ################################## Plot histology data
-# Select the samples used for RNAseq
+# In case any immediate processing of the raw data becomes necessary
 Histology_Data <- Histology_Raw_Data %>% 
-  dplyr::filter(Cohort == "H09")
+  mutate(Cohort = factor(Cohort, levels = c("M", "G1", "G2")))
 
 #Statistical test of histological assays with fdr adjustment
 
@@ -144,13 +145,26 @@ Histological_Assay_Tests <- tibble(assay = c("HAI",
   mutate(padj = p.adjust(pvalue, method = "BH"))
 
 #HAI total
-HAI_Total_Plot <- ggplot(Histology_Data,
-       aes(x = condition,
+#Manually count the overlaps
+counted_data_HAI <- Histology_Data %>%
+  group_by(Cohort, HAI_Total, condition) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(n = as.factor(n))  # Convert counts to factor for manual sizing
+
+HAI_Total_Plot <- ggplot(counted_data_HAI,
+       aes(x = Cohort,
            y = HAI_Total,
-           color = condition)) +
+           color = condition,
+           shape = Cohort)) +
   scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
-  geom_jitter(width = 0.1, height = 0) +
+  geom_point(aes(size = n)) +
   scale_y_continuous(breaks = 0:24) +
+  geom_text(data = Histology_Data %>%
+      dplyr::filter(User_ID %in% c("H1001", "H1008", "H1002", "H1009")),
+    aes(label = Manuscript_ID),
+    nudge_x = 0.35) +
+  scale_size_manual(values = c("1" = 3, "2" = 5)) +
   theme_bw() +
   labs(title = str_c("adjusted p-value = ", as.character(Histological_Assay_Tests %>% 
                                             dplyr::filter(assay == "HAI") %>% 
@@ -159,20 +173,37 @@ HAI_Total_Plot <- ggplot(Histology_Data,
 print(HAI_Total_Plot)
 ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.eps",
        plot = HAI_Total_Plot,
-       width = 750,
-       height = 1120,
+       width = 750*2,
+       height = 1120*2,
+       units = "px")
+ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.pdf",
+       plot = HAI_Total_Plot,
+       width = 750*2,
+       height = 1120*2,
        units = "px")
 
 #Bacteria
-Bacteria_Plot <- ggplot(Histology_Data,
-       aes(x = condition,
+#Manually count the overlaps
+counted_data_Bacteria <- Histology_Data %>%
+  group_by(Cohort, Bacteria, condition) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(n = as.factor(n))  # Convert counts to factor for manual sizing
+Bacteria_Plot <- ggplot(counted_data_Bacteria,
+       aes(x = Cohort,
            y = Bacteria,
-           color = condition)) +
-  geom_jitter(width = 0.1, 
-              height = 0) +
+           color = condition,
+           shape = Cohort)) +
+  scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
+  geom_point(aes(size = n)) +
   scale_y_continuous(breaks = seq(from = 0,
-                                  to = 80,
+                                  to = 100,
                                   by = 10)) +
+  geom_text(data = Histology_Data %>%
+              dplyr::filter(User_ID %in% c("H1001", "H1008", "H1002", "H1009")),
+            aes(label = Manuscript_ID),
+            nudge_x = 0.35) +
+  scale_size_manual(values = c("1" = 3, "2" = 5, "3" = 7, "4" = 9, "5" = 11)) +
   theme_bw() +
   labs(title = str_c("adjusted p-value = ", as.character(Histological_Assay_Tests %>% 
                                             dplyr::filter(assay == "Bacteria") %>% 
@@ -181,10 +212,14 @@ Bacteria_Plot <- ggplot(Histology_Data,
 print(Bacteria_Plot)
 ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.eps",
        plot = Bacteria_Plot,
-       width = 750,
-       height = 1120,
+       width = 750*2,
+       height = 1120*2,
        units = "px")
-
+ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.pdf",
+       plot = Bacteria_Plot,
+       width = 750*2,
+       height = 1120*2,
+       units = "px")
 
 
 ########################################## SessionInfo

@@ -107,13 +107,25 @@ if (!dir.exists("./R_output_files/Tables")) {
 # Import sample info file from 00-Reports, annotate sample list and convert potentially problematic characters in column names
 # Change path to where in your directory the file S.Linden_22_01_sample_info.txt is
 # Excluding samples from treatment group as they are outside the scope of this article
+# Creating new set of IDs for manuscript that is a bit more intuitive
+replacement_list_User_ID <- c("M-1" = "H9_01",
+                                "M-2" = "H9_02",
+                                "M-3" = "H9_03",
+                                "M-4" = "H9_04",
+                                "M-5" = "H9_05",
+                                "M-6" = "H9_06",
+                                "M-7" = "H9_07",
+                                "M-8" = "H9_08",
+                                "M-9" = "H9_09",
+                                "M-10" = "H9_10")
+
 Sample_List <- read_tsv(
   file = "./P26010/00-Reports/S.Linden_22_01_sample_info.txt",
   col_types = c("ccdd")
 ) %>%
   dplyr::rename(names = "NGI ID") %>%
   dplyr::rename(User_ID = "User ID") %>%
-  # dplyr::rename(GreaterThan_Q30 = "≥Q30") %>% Removed for robustness, encountered problem where ≥ was misread as = by read_tsv
+  dplyr::mutate(Manuscript_ID = str_replace_all(User_ID, setNames(names(replacement_list_User_ID), replacement_list_User_ID))) %>% 
   dplyr::filter(!User_ID %in% c(
     "H9_11",
     "H9_12",
@@ -398,7 +410,7 @@ PCA <- ggplot(df, aes(
   color = condition
 )) +
   scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
-  geom_label(aes(label = User_ID),
+  geom_label(aes(label = Manuscript_ID),
              size = 2) +
   labs(
     x = paste0(
@@ -454,7 +466,9 @@ ggsave(
 )
 
 ## First 5 PCs seems appropriate to me.
-UMAP_Input <- df[, 7:11]
+UMAP_Input <- df %>% 
+  dplyr::select(starts_with("PC")) %>% 
+  dplyr::select(1:5)
 
 ## Set seed for umap, if I understand correctly this is by default random and not the same seed as set before.
 custom.config <- umap.defaults
@@ -487,7 +501,7 @@ UMAP_Plot <- ggplot(
 ) +
   scale_colour_manual(values = c("Non_Infected" = "#4DC36B", "Infected" = "#440C55")) +
   # geom_point() +
-  geom_label(aes(label = User_ID),
+  geom_label(aes(label = Manuscript_ID),
              size = 2) +
   labs(
     title = "UMAP dimensionality reduction on PCA with PC1 through PC5"

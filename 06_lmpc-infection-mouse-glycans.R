@@ -347,10 +347,35 @@ nrow(Glycan_Input_Excel_Processed_Output %>%
 
 write_xlsx(x = Glycan_Input_Excel_Processed_Output,
            path = "./R_intermediate_files/Mattias_Mouse_Gastric_Glycans_All_Fixed_2024_05_31.xlsx")
+
+# create new more intuitive names for the manuscript
+replacement_list_Sample_ID <- c("G1-1" = "H0701",
+                                "G1-2" = "H0702", 
+                                "G1-3" = "H0703", 
+                                "G1-4" = "H0704",
+                                "G1-5" = "H0706",
+                                "G1-6" = "H0708",
+                                "G1-7" = "H0709",
+                                "G1-8" = "H0710",
+                                "G2-1" = "H1001",
+                                "G2-2" = "H1002",
+                                "G2-3" = "H1003",
+                                "G2-4" = "H1004",
+                                "G2-5" = "H1007",
+                                "G2-6" = "H1008",
+                                "G2-7" = "H1009",
+                                "G2-8" = "H1010")
+
+Glycan_Input_Excel_Processed_Output_Renamed <- Glycan_Input_Excel_Processed_Output %>%
+  dplyr::mutate(Old_ID = Sample_ID) %>% 
+  dplyr::mutate(Sample_ID = str_replace_all(Sample_ID, setNames(names(replacement_list_Sample_ID), replacement_list_Sample_ID)))
+
 # Filtering down to the lmpc infection manuscript samples and exporting
-Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input <- Glycan_Input_Excel_Processed_Output %>% 
+Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input <- Glycan_Input_Excel_Processed_Output_Renamed %>% 
   dplyr::filter(Treatment_Group == "ShamInfected" | Treatment_Group == "HpyloriInfected") %>% 
   dplyr::select(-Canonicalized_Structure)
+
+
 
 write_xlsx(x = Glycan_Input_Excel_Processed_Output_Infection_Manuscript_Input,
            path = "./R_input_files/Glycan_Input.xlsx")
@@ -368,7 +393,7 @@ df_glycan_canonicalized_all_data <- read_xlsx(path = "./R_input_files/Glycan_Inp
   dplyr::group_by(Glycan_ID, Sample_ID) %>% 
   dplyr::mutate("Glycan_Size" = sum(Hex, HexNAc, Fucose, Neu5Ac, Neu5Gc)) %>%  # Calculate glycan size, defined as the sum of monosackarides (i.e., not including sulfate)
   dplyr::ungroup() %>% 
-  dplyr::mutate(Cohort = str_extract(Sample_ID, "^..."))
+  dplyr::mutate(Cohort = str_extract(Sample_ID, "^.."))
 
 # QC
 # Any duplicate structures?
@@ -398,8 +423,8 @@ write_tsv(x = df_canonicalized_mouse_all,
           file = "./Python_input_files/df_canonicalized_mouse_all.tsv")
 
 df_canonicalized_mouse_minimal_glycan_col_all <- df_canonicalized_mouse_all %>% 
-  dplyr::select(Canonicalized_Structure, starts_with(c("H07", "H10"))) %>% 
-  pivot_longer(cols = starts_with(c("H07", "H10")),
+  dplyr::select(Canonicalized_Structure, starts_with(c("G1", "G2"))) %>% 
+  pivot_longer(cols = starts_with(c("G1", "G2")),
                names_to = "id",
                values_to = "Glycan_Relative_Abundance_Percentage") %>% 
   pivot_wider(names_from = "Canonicalized_Structure",
@@ -408,7 +433,7 @@ write_tsv(x = df_canonicalized_mouse_minimal_glycan_col_all,
           file = "./Python_input_files/df_canonicalized_mouse_minimal_glycan_col_all.tsv")
 
 df_canonicalized_mouse_minimal_sample_col_all <- df_canonicalized_mouse_all %>% 
-  dplyr::select(Canonicalized_Structure, starts_with(c("H07", "H10"))) %>% 
+  dplyr::select(Canonicalized_Structure, starts_with(c("G1", "H10"))) %>% 
   dplyr::rename("glycan" = Canonicalized_Structure)
 write_tsv(x = df_canonicalized_mouse_minimal_sample_col_all,
           file = "./Python_input_files/df_canonicalized_mouse_minimal_sample_col_all.tsv")
@@ -441,6 +466,7 @@ write_tsv(x = mouse_uninfected_vehicle_sample_names,
 # Analyse glycan size and monosackaride distribution
 # Do this by combining glycan relative abundances for all glycans of the same size
 # Glycan size is defined as the sum of all monosackarides (i.e., not including sulfate)
+
 df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
   dplyr::group_by(Glycan_Size, Sample_ID) %>% 
   dplyr::mutate("Glycan_Size_Relative_Abundance_Percentage" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
@@ -480,7 +506,7 @@ annotations <- df_r_glycomics %>%
 # Define custom colors for annotations
 ann_colors <- list(
   Treatment_Group = c(ShamInfected = "#4DC36B", HpyloriInfected = "#440C55"),
-  Cohort = c(H07 = "#E85311", H10 = "#15B8E9")
+  Cohort = c(G1 = "#E85311", G2 = "#15B8E9")
 )
 
 # Create the heatmap with clustering and annotations
@@ -556,7 +582,7 @@ ggsave(filename = "./R_output_files/Figures/Moiety_Heatmap.svg",
 # The heatmap suggests heavy fucosylation, lets quantify it and the other moietys
 Moiety_Statistics_Table <- df_r_reside_wide %>%
   tibble::rownames_to_column("Moiety") %>% 
-  tidyr::pivot_longer(starts_with("H"), values_to = "Moiety_Relative_Abundance_Percentage", names_to = "Sample_ID") %>% 
+  tidyr::pivot_longer(starts_with("G"), values_to = "Moiety_Relative_Abundance_Percentage", names_to = "Sample_ID") %>% 
   dplyr::group_by(Moiety) %>% 
   dplyr::mutate(Mean_Moiety_Relative_Abundance_Percentage = mean(Moiety_Relative_Abundance_Percentage)) %>% 
   dplyr::mutate(SD_Moiety_Relative_Abundance_Percentage = sd(Moiety_Relative_Abundance_Percentage)) %>% 

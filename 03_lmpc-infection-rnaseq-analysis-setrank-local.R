@@ -133,7 +133,7 @@ base::save(collection,
 ## Use SetRank in ranked mode
 ## CAUTION! Might take several days to complete.
 network <- setRankAnalysis(
-  geneIDs = geneIDs, # Gene list ranked by adjusted p-value
+  geneIDs = geneIDs, # Gene list ranked by adjusted p-value (sorted in previous script)
   setCollection = collection, # SetRank collection from above
   use.ranks = TRUE, # Ranked mode
   setPCutoff = 0.01, # This is default of 0.01
