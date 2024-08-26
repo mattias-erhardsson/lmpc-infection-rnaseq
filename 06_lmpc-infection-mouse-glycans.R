@@ -415,7 +415,8 @@ df_canonicalized_mouse_all <- df_glycan_canonicalized_all_data %>%
                    "RetentionTime", 
                    "DataComment",
                    "Treatment_Group",
-                   "Cohort"
+                   "Cohort",
+                   "Old_ID"
                    )) %>% 
   pivot_wider(names_from = "Sample_ID",
               values_from = "Glycan_Relative_Abundance_Percentage")
@@ -433,7 +434,7 @@ write_tsv(x = df_canonicalized_mouse_minimal_glycan_col_all,
           file = "./Python_input_files/df_canonicalized_mouse_minimal_glycan_col_all.tsv")
 
 df_canonicalized_mouse_minimal_sample_col_all <- df_canonicalized_mouse_all %>% 
-  dplyr::select(Canonicalized_Structure, starts_with(c("G1", "H10"))) %>% 
+  dplyr::select(Canonicalized_Structure, starts_with(c("G1", "G2"))) %>% 
   dplyr::rename("glycan" = Canonicalized_Structure)
 write_tsv(x = df_canonicalized_mouse_minimal_sample_col_all,
           file = "./Python_input_files/df_canonicalized_mouse_minimal_sample_col_all.tsv")
@@ -443,7 +444,7 @@ mouse_sample_metadata_all <- df_glycan_canonicalized_all_data %>%
   distinct() %>% 
   dplyr::rename("id" = Sample_ID) %>% 
   dplyr::rename("Group" = Treatment_Group) %>% 
-  dplyr::mutate(Cohort = str_extract(id, "^..."))
+  dplyr::mutate(Cohort = str_extract(id, "^.."))
 write_tsv(x = mouse_sample_metadata_all,
           file = "./Python_input_files/mouse_sample_metadata_all.tsv")
 
@@ -485,7 +486,114 @@ df_r_glycomics <- df_glycan_canonicalized_all_data %>%
                 Treatment_Group, 
                 Cohort, 
                 Glycan_Size_Relative_Abundance_Percentage, 
-                Glycan_Relative_Abundance_Percentage)
+                Glycan_Relative_Abundance_Percentage) %>% 
+  distinct()
+
+## Glycan heatmap
+# Transform data to wide format
+df_r_glycan_id_wide <- df_r_glycomics %>%
+  dplyr::select(Sample_ID,
+                Glycan_Size_Relative_Abundance_Percentage,
+                Canonicalized_Structure) %>% 
+  dplyr::distinct() %>% 
+  tidyr::pivot_wider(names_from = Sample_ID, values_from = Glycan_Size_Relative_Abundance_Percentage) %>%
+  tibble::column_to_rownames("Canonicalized_Structure")
+
+# Extract annotations
+annotations <- df_r_glycomics %>%
+  dplyr::select(Sample_ID, Treatment_Group, Cohort) %>%
+  dplyr::distinct() %>%
+  tibble::column_to_rownames("Sample_ID")
+
+# Define custom colors for annotations
+ann_colors <- list(
+  Treatment_Group = c(ShamInfected = "#4DC36B", HpyloriInfected = "#440C55"),
+  Cohort = c(G1 = "#E85311", G2 = "#15B8E9")
+)
+
+# Create the heatmap with clustering and annotations
+Glycan_ID_Heatmap <- pheatmap(
+  df_r_glycan_id_wide,
+  cluster_rows = FALSE,
+  cluster_cols = TRUE,
+  annotation_col = annotations,
+  annotation_colors = ann_colors,
+  color = viridis::viridis(256),
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  main = "Glycan relative abundance heatmap"
+)
+print(Glycan_ID_Heatmap)
+
+ggsave(filename = "./R_output_files/Figures/Glycan_ID_Heatmap.pdf",
+       plot = Glycan_ID_Heatmap)
+ggsave(filename = "./R_output_files/Figures/Glycan_ID_Heatmap.svg",
+       plot = Glycan_ID_Heatmap)
+
+## Mean glycan heatmap
+# Transform data to wide format
+df_r_glycan_id_wide_mean <- df_r_glycomics %>%
+  dplyr::select(Sample_ID,
+                Glycan_Relative_Abundance_Percentage,
+                Canonicalized_Structure,
+                Glycan_ID) %>% 
+  dplyr::distinct() %>% 
+  dplyr::group_by(Canonicalized_Structure) %>% 
+  dplyr::mutate("Glycan_Mean_Relative_Abundance_Percentage" = mean(Glycan_Relative_Abundance_Percentage)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(#Canonicalized_Structure, 
+                Glycan_Mean_Relative_Abundance_Percentage,
+                Glycan_ID) %>% 
+  dplyr::distinct() %>% 
+  tibble::column_to_rownames("Glycan_ID")
+
+# Step 3: Customize the labels for the color scale
+# Here you can define where you want your labels to appear
+legend_breaks <- seq(min(df_r_glycan_id_wide_mean, na.rm = TRUE),
+                     max(df_r_glycan_id_wide_mean, na.rm = TRUE),
+                     length.out = 5)
+
+# Define custom labels (adjust these according to your needs)
+legend_labels <- round(legend_breaks, 2)
+
+# Generate the heatmap
+Glycan_ID_Heatmap_mean <- pheatmap(
+  df_r_glycan_id_wide_mean,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color = viridis::viridis(256),
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  legend_breaks = legend_breaks,
+  legend_labels = legend_labels,
+  main = "Glycan mean relative abundance heatmap"
+)
+
+print(Glycan_ID_Heatmap_mean)
+
+# Create the heatmap with clustering and annotations
+Glycan_ID_Heatmap_mean <- pheatmap(
+  df_r_glycan_id_wide_mean,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color = viridis::viridis(256),
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  legend_breaks = c(0,1,2,3,4,5,6,7,8,9),
+  legend_labels = c(0,1,2,3,4,5,6,7,8,9),
+  breaks = seq(0, 9, length.out = 256),
+  main = "Glycan mean relative abundance heatmap"
+)
+print(Glycan_ID_Heatmap_mean)
+
+ggsave(filename = "./R_output_files/Figures/Glycan_ID_Heatmap_mean.pdf",
+       plot = Glycan_ID_Heatmap_mean,
+       height = 512,
+       units = "mm")
+ggsave(filename = "./R_output_files/Figures/Glycan_ID_Heatmap_mean.svg",
+       plot = Glycan_ID_Heatmap_mean,
+       height = 512,
+       units = "mm")
 
 ## Glycan size heatmap
 # Transform data to wide format
@@ -516,7 +624,7 @@ Glycan_Size_Heatmap <- pheatmap(
   cluster_cols = TRUE,
   annotation_col = annotations,
   annotation_colors = ann_colors,
-  color = viridis::viridis(100),
+  color = viridis::viridis(256),
   show_colnames = TRUE,
   show_rownames = TRUE,
   main = "Glycan size heatmap"
@@ -567,7 +675,7 @@ Moiety_Heatmap <- pheatmap(
   cluster_cols = TRUE,
   annotation_col = annotations,
   annotation_colors = ann_colors,
-  color = viridis::viridis(100),
+  color = viridis::viridis(256),
   show_colnames = TRUE,
   show_rownames = TRUE,
   main = "Moiety heatmap"

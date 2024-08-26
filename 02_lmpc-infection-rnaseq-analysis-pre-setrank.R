@@ -713,6 +713,24 @@ top_infection_genes_fc4 <- sig_genes %>%
 # Exporting significant genes with absolute log 2 fold change
 write_xlsx(top_infection_genes_fc4, "./R_output_files/Tables/top_infection_genes_fc4.xlsx")
 
+# Significant genes with absolute log 2 fold change > 3
+top_infection_genes_fc3 <- sig_genes %>%
+  dplyr::filter(log2FoldChange > 3 | log2FoldChange < -3) %>%
+  arrange(log2FoldChange) %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue)
+
+# Exporting significant genes with absolute log 2 fold change
+write_xlsx(top_infection_genes_fc3, "./R_output_files/Tables/top_infection_genes_fc3.xlsx")
+
+# Significant genes with absolute log 2 fold change > 2
+top_infection_genes_fc2 <- sig_genes %>%
+  dplyr::filter(log2FoldChange > 2 | log2FoldChange < -2) %>%
+  arrange(log2FoldChange) %>%
+  dplyr::select(GeneSymbol, log2FoldChange, adj_pvalue)
+
+# Exporting significant genes with absolute log 2 fold change
+write_xlsx(top_infection_genes_fc2, "./R_output_files/Tables/top_infection_genes_fc2.xlsx")
+
 
 ################################## Calculate TPM (transcripts per kilobase million) for better visualization of within-sample gene expression
 ensdb <- EnsDb.Mmusculus.v79
