@@ -98,7 +98,7 @@ df_canonicalized_mouse_all <- read_tsv("./Python_input_files/df_canonicalized_mo
 df_glycan_canonicalized_all_data <- readxl::read_xlsx(path = "./R_output_files/tables/df_glycan_canonicalized_all_data.xlsx")
 quantified_terminal_motifs <- readxl::read_xlsx(path = "./Python_output_files/Tables/quantified_terminal_motifs.xlsx")
 
-################################## PCA on motif level with k-means clustering
+################################## PCA on motif level
 df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
   dplyr::group_by(Glycan_Size, Sample_ID) %>% 
   dplyr::mutate("Glycan_Size_Relative_Abundance_Percentage" = sum(Glycan_Relative_Abundance_Percentage)) %>% 
@@ -178,79 +178,8 @@ pca_plot <- ggplot(pca_df, aes(
   theme_bw()
 print(pca_plot)
 
-## K means clustering
-# Define the range of clusters to test
-k_values <- 1:10
-
-# Calculate total within-cluster sum of square (WSS) for each k
-wss <- map_dbl(k_values, function(k){
-  kmeans(pca_analysis$x[, 1:2], centers = k, nstart = 25)$tot.withinss
-})
-
-# Create a dataframe for plotting the elbow curve
-elbow_df <- data.frame(k = k_values, wss = wss)
-
-# Plot the elbow curve
-elbow_plot <- ggplot(elbow_df, aes(x = k, y = wss)) +
-  geom_point() +
-  geom_line() +
-  labs(
-    x = "Number of Clusters (k)",
-    y = "Total Within-Cluster Sum of Squares (WSS)",
-    title = "Elbow Method for Optimal k"
-  ) +
-  scale_x_continuous(breaks = k_values) +
-  theme_minimal()
-
-print(elbow_plot)
-
-# Select the optimal k (you can choose based on the elbow plot)
-optimal_k <- 5  # Adjust based on the elbow plot
-
-# Perform k-means clustering with the selected k
-kmeans_result <- kmeans(pca_analysis$x[, 1:2], centers = optimal_k, nstart = 25)
-
-# Add cluster assignments to the PCA dataframe
-pca_df <- pca_df %>%
-  mutate(Cluster = as.factor(kmeans_result$cluster))
-
-# Plot PCA with cluster assignments
-pca_cluster_plot <- ggplot(pca_df, aes(
-  x = PC1,
-  y = PC2,
-  color = Treatment_Group,
-  shape = Cluster
-)) +
-  geom_point(size = 3) +
-  geom_label(aes(label = Sample_ID#, fill = Cohort
-                 ),
-             size = 2,
-             position = position_nudge(1.3)) +
-  scale_colour_manual(values = c("ShamInfected" = "#4DC36B", "HpyloriInfected" = "#440C55")) +
-  #scale_fill_manual(values = c(G1 = "#E85311", G2 = "#15B8E9")) +
-  labs(
-    x = paste0(
-      "PC1 (captures ",
-      round((summary(pca_analysis)$importance[2, 1]) * 100, 1),
-      "% of variance)"
-    ),
-    y = paste0(
-      "PC2 (captures ",
-      round((summary(pca_analysis)$importance[2, 2]) * 100, 1),
-      "% of variance)"
-    ),
-    title = paste0(
-      "K-means Clustering on PC1 and PC2 with k = ", optimal_k
-    )
-  ) +
-  theme_minimal()
-
-print(pca_cluster_plot)
-
-
-ggsave(
-  filename = "./R_output_files/Figures/PCA.eps",
-  plot = PCA,
+ggsave(filename = "./R_output_files/Figures/pca_plot.eps",
+  plot = pca_plot,
   width = 1484,
   height = 700,
   units = "px"
