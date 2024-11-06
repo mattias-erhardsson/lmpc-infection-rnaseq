@@ -173,13 +173,13 @@ HAI_Total_Plot <- ggplot(counted_data_HAI,
 print(HAI_Total_Plot)
 ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.eps",
        plot = HAI_Total_Plot,
-       width = 750*2,
-       height = 1120*2,
+       width = 750*5, #750*2
+       height = 1120, #1120*2
        units = "px")
 ggsave(filename = "./R_output_files/Figures/HAI_Total_Plot.pdf",
        plot = HAI_Total_Plot,
-       width = 750*2,
-       height = 1120*2,
+       width = 750*3, #750*2
+       height = 1120, #1120*2
        units = "px")
 
 #Bacteria
@@ -212,13 +212,13 @@ Bacteria_Plot <- ggplot(counted_data_Bacteria,
 print(Bacteria_Plot)
 ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.eps",
        plot = Bacteria_Plot,
-       width = 750*2,
-       height = 1120*2,
+       width = 750*5, #750*2
+       height = 1120, #1120*2
        units = "px")
 ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.pdf",
        plot = Bacteria_Plot,
-       width = 750*2,
-       height = 1120*2,
+       width = 750*3, #750*2
+       height = 1120, #1120*2
        units = "px")
 
 
