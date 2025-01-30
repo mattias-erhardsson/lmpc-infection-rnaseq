@@ -97,6 +97,7 @@ if (!dir.exists("./R_output_files/Tables")) {
 df_canonicalized_mouse_all <- read_tsv("./Python_input_files/df_canonicalized_mouse_all.tsv")
 df_glycan_canonicalized_all_data <- readxl::read_xlsx(path = "./R_output_files/tables/df_glycan_canonicalized_all_data.xlsx")
 quantified_terminal_motifs <- readxl::read_xlsx(path = "./Python_output_files/Tables/quantified_terminal_motifs.xlsx")
+glycans_terminal_motifs_annotation <- readxl::read_xlsx(path = "./Python_output_files/Tables/glycans_terminal_motifs_annotation.xlsx")
 
 ################################## PCA on motif level
 df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
@@ -184,6 +185,29 @@ ggsave(filename = "./R_output_files/Figures/pca_plot.eps",
   height = 700,
   units = "px"
 )
+
+################################## Calculate percentage of terminal motifs that were H antigens
+# Relative abundance of glycans with at least 1 H antigen
+Glycans_With_H_Antigen <- df_canonicalized_mouse_all %>% 
+  dplyr::select(Canonicalized_Structure, Glycan_ID, Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::full_join(glycans_terminal_motifs_annotation,
+                   by = "Canonicalized_Structure") %>%
+  pivot_longer(cols = starts_with("Terminal"),
+               names_to = "Motif",
+               values_to = "Count") %>% 
+  dplyr::mutate("H_Antigen_Motif" = str_detect(Motif, "Terminal_Fuc\\(a...\\)Gal\\(b...\\)GlcNAc")) %>% 
+  dplyr::mutate("H_Antigen_Motif_And_Detected_In_Glycan" = H_Antigen_Motif == TRUE & Count > 0) %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure, Glycan_Mean_Relative_Abundance, H_Antigen_Motif_And_Detected_In_Glycan) %>% 
+  dplyr::filter(H_Antigen_Motif_And_Detected_In_Glycan == TRUE) %>% 
+  dplyr::distinct()
+
+Glycans_With_H_Antigen %>% 
+  summarise("Relative_Abundance_Of_Glycans_With_H_Antigen" = sum(Glycan_Mean_Relative_Abundance))
+
+# Sanity check by comparing relative abundance of all other glycans
+df_canonicalized_mouse_all %>% 
+  dplyr::anti_join(Glycans_With_H_Antigen, by = "Glycan_ID") %>% 
+  summarise("Relative_Abundance_Of_Glycans_Without_H_Antigen" = sum(Glycan_Mean_Relative_Abundance))
 
 ########################################## SessionInfo
 sessionInfo()
