@@ -923,13 +923,22 @@ TPM_ggplot_df %>%
   distinct() %>%
   plyr::count("Cell_Type")
 
-## Save table
+## Save table of marker gene overview
 write_xlsx(
   x = TPM_ggplot_df %>%
     dplyr::select(Cell_Type, GeneSymbol) %>%
-    distinct() %>%
+    dplyr::distinct() %>%
     plyr::count("Cell_Type"),
   path = "./R_output_files/Tables/Cell_Type_Markers_Summary.xlsx"
+)
+
+## Save table of marker gene details
+write_xlsx(
+  x = TPM_ggplot_df %>%
+    dplyr::select(Cell_Type, GeneSymbol) %>%
+    dplyr::distinct() %>% 
+    dplyr::arrange(Cell_Type),
+  path = "./R_output_files/Tables/Cell_Type_Markers_Details.xlsx"
 )
 
 ## Plot marker genes
