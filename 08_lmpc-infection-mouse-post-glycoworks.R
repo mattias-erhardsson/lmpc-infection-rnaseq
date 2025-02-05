@@ -99,6 +99,28 @@ df_glycan_canonicalized_all_data <- readxl::read_xlsx(path = "./R_output_files/t
 quantified_terminal_motifs <- readxl::read_xlsx(path = "./Python_output_files/Tables/quantified_terminal_motifs.xlsx")
 glycans_terminal_motifs_annotation <- readxl::read_xlsx(path = "./Python_output_files/Tables/glycans_terminal_motifs_annotation.xlsx")
 
+################################## Show what the top 10 most abundant glycans were
+df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure, Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::slice_max(Glycan_Mean_Relative_Abundance,
+                   n = 10)
+
+################################## Show what the top 10 most abundant terminal glycan motifs with 1, 2 or 3 monosackarides were
+quantified_terminal_motifs %>% 
+  pivot_longer(cols = starts_with("G"),
+               names_to = "Sample_ID",
+               values_to = "Motif_Relative_Abundance") %>% 
+  group_by(Terminal_Motif) %>% 
+  mutate("Mean_Motif_Relative_Abundance" = mean(Motif_Relative_Abundance)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(Terminal_Motif, 
+                Mean_Motif_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::slice_max(Mean_Motif_Relative_Abundance,
+                   n = 10) %>% 
+  dplyr::arrange(desc(Mean_Motif_Relative_Abundance))
+
 ################################## PCA on motif level
 df_r_glycomics <- df_glycan_canonicalized_all_data %>% 
   dplyr::group_by(Glycan_Size, Sample_ID) %>% 
