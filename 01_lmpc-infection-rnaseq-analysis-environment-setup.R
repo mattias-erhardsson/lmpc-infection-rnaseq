@@ -59,6 +59,7 @@ renv::install("bioc::igraph", prompt = FALSE)
 # It implements a new function to change label positions
 # Important addition was made in commit 2023-08-08
 # Using latest available commit 2023-08-12 below
+Sys.setenv(RENV_DOWNLOAD_METHOD = "libcurl") # Preventing renv error https://github.com/rstudio/renv/issues/1869
 renv::install("cytoscape/RCy3@3015129d026346c1307d06e1eb9d48be6d675318", prompt = FALSE)
 
 # Another special case is SetRank. 

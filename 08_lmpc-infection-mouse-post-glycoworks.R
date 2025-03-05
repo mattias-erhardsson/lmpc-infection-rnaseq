@@ -106,6 +106,43 @@ df_glycan_canonicalized_all_data %>%
   dplyr::slice_max(Glycan_Mean_Relative_Abundance,
                    n = 10)
 
+################################## Calculate top 10 vs rest abundances
+# Top 10 glycans summed abundance
+df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure, Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::slice_max(Glycan_Mean_Relative_Abundance,
+                   n = 10) %>% 
+  dplyr::select(Glycan_ID) %>% 
+  dplyr::inner_join(df_glycan_canonicalized_all_data, by = "Glycan_ID") %>% 
+  dplyr::select(Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::summarise(Summed_Abundance_Top_10_Glycans = sum(Glycan_Mean_Relative_Abundance))
+
+# Rest (=90) bottom glycans summed abundance
+df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure, Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::slice_min(Glycan_Mean_Relative_Abundance,
+                   n = 90) %>% 
+  dplyr::select(Glycan_ID) %>% 
+  dplyr::inner_join(df_glycan_canonicalized_all_data, by = "Glycan_ID") %>% 
+  dplyr::select(Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::summarise(Summed_Abundance_Bottom_90_Glycans = sum(Glycan_Mean_Relative_Abundance))
+
+# Max abundance of individual bottom 90 glycans
+df_glycan_canonicalized_all_data %>% 
+  dplyr::select(Glycan_ID, Canonicalized_Structure, Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::slice_min(Glycan_Mean_Relative_Abundance,
+                   n = 90) %>% 
+  dplyr::select(Glycan_ID) %>% 
+  dplyr::inner_join(df_glycan_canonicalized_all_data, by = "Glycan_ID") %>% 
+  dplyr::select(Glycan_Mean_Relative_Abundance) %>% 
+  dplyr::distinct() %>% 
+  dplyr::summarise(Max_Abundance_Bottom_90_Glycans = max(Glycan_Mean_Relative_Abundance))
+
 ################################## Show what the top 10 most abundant terminal glycan motifs with 1, 2 or 3 monosackarides were
 quantified_terminal_motifs %>% 
   pivot_longer(cols = starts_with("G"),
