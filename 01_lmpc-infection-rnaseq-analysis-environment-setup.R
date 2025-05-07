@@ -37,6 +37,11 @@ renv::install("BiocManager@1.30.22", prompt = FALSE)
 renv::install("reticulate@1.35.0", prompt = FALSE)
 renv::install("pheatmap@1.0.12", prompt = FALSE)
 
+# Downgrading dbplyr to prevent issues with listEnsemblArchives
+# Recommend not upgrading other packages in case they break the script
+devtools::install_version("dbplyr", version = "2.3.4")
+3
+
 # Then Bioconductor packages
 renv::install("bioc::DESeq2", prompt = FALSE)
 renv::install("bioc::IHW", prompt = FALSE)
