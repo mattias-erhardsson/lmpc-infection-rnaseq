@@ -15,7 +15,7 @@ devtools::install_version("pbdZMQ", version = "0.3-9")
 # Then restore which installs most of the needed packages
 renv::restore()
 
-# Then manual installation of important packages that renv seems to struggle with in UPPMAX
+# Then manual installation of important packages to help ensure they are all installed
 # CRAN packages first
 renv::install("plyr@1.8.8", prompt = FALSE)
 renv::install("tidyverse@2.0.0", prompt = FALSE)
@@ -65,6 +65,7 @@ renv::install("bioc::igraph", prompt = FALSE)
 # Important addition was made in commit 2023-08-08
 # Using latest available commit 2023-08-12 below
 Sys.setenv(RENV_DOWNLOAD_METHOD = "libcurl") # Preventing renv error https://github.com/rstudio/renv/issues/1869
+renv::install("cran/uchardet@e53d2c904184244c336c3d9fa186130c76748891", prompt = FALSE) #uchardet required for cytoscape commit below
 renv::install("cytoscape/RCy3@3015129d026346c1307d06e1eb9d48be6d675318", prompt = FALSE)
 
 # Another special case is SetRank. 
@@ -119,7 +120,8 @@ lapply(
   character.only = TRUE
 )
 
-#renv::snapshot()
+renv::snapshot()
+Y
 
 ##################################################### Script finished
 sessionInfo()

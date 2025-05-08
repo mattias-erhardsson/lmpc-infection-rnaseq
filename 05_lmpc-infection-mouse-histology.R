@@ -226,3 +226,4 @@ ggsave(filename = "./R_output_files/Figures/Bacteria_Plot.pdf",
 sessionInfo()
 
 print("Script 5 finished")
+

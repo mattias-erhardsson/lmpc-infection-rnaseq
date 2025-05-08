@@ -20,8 +20,8 @@
    <dependency name="nodeSizeLocked" value="true"/>
    <visualProperty name="NODE_BORDER_PAINT" default="#333333">
     <continuousMapping attributeType="float" attributeName="setRank">
-     <continuousMappingPoint lesserValue="#000000" equalValue="#cccccc" greaterValue="#cccccc" attrValue="0.00166086869821148"/>
-     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#FF0000" attrValue="0.0153532767761233"/>
+     <continuousMappingPoint lesserValue="#000000" equalValue="#cccccc" greaterValue="#cccccc" attrValue="0.00153836272129775"/>
+     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#FF0000" attrValue="0.0176067075538497"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="NODE_BORDER_STROKE" default="SOLID"/>
@@ -67,8 +67,8 @@
    <visualProperty name="NODE_FILL_COLOR" default="#ffffff">
     <continuousMapping attributeType="float" attributeName="pp">
      <continuousMappingPoint lesserValue="#000000" equalValue="#009999" greaterValue="#009999" attrValue="1.30102999566398"/>
-     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.23227582313694"/>
-     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.3721027689869"/>
+     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.18179361047696"/>
+     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.5457311964716"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="NODE_HEIGHT" default="50.0"/>
@@ -135,16 +135,16 @@
    <visualProperty name="EDGE_SOURCE_ARROW_UNSELECTED_PAINT" default="#000000">
     <continuousMapping attributeType="float" attributeName="sourceppDiff">
      <continuousMappingPoint lesserValue="#000000" equalValue="#009999" greaterValue="#009999" attrValue="1.30102999566398"/>
-     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.23227582313694"/>
-     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.3721027689869"/>
+     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.18179361047696"/>
+     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.5457311964716"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="EDGE_STROKE_SELECTED_PAINT" default="#ff0000"/>
    <visualProperty name="EDGE_STROKE_UNSELECTED_PAINT" default="#333333">
     <continuousMapping attributeType="float" attributeName="ppIntersection">
      <continuousMappingPoint lesserValue="#000000" equalValue="#009999" greaterValue="#009999" attrValue="1.30102999566398"/>
-     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.23227582313694"/>
-     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.3721027689869"/>
+     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.18179361047696"/>
+     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.5457311964716"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="EDGE_TARGET_ARROW_SELECTED_PAINT" default="#ffff00"/>
@@ -158,23 +158,23 @@
    <visualProperty name="EDGE_TARGET_ARROW_UNSELECTED_PAINT" default="#333333">
     <continuousMapping attributeType="float" attributeName="sinkppDiff">
      <continuousMappingPoint lesserValue="#000000" equalValue="#009999" greaterValue="#009999" attrValue="1.30102999566398"/>
-     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.23227582313694"/>
-     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.3721027689869"/>
+     <continuousMappingPoint lesserValue="#990099" equalValue="#990099" greaterValue="#990099" attrValue="3.18179361047696"/>
+     <continuousMappingPoint lesserValue="#cc0000" equalValue="#cc0000" greaterValue="#cc0000" attrValue="10.5457311964716"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="EDGE_TOOLTIP" default=""/>
    <visualProperty name="EDGE_TRANSPARENCY" default="255">
     <continuousMapping attributeType="float" attributeName="deltaP">
-     <continuousMappingPoint lesserValue="112" equalValue="112" greaterValue="112" attrValue="0.189314038453561"/>
-     <continuousMappingPoint lesserValue="255" equalValue="255" greaterValue="255" attrValue="12.5554015281413"/>
+     <continuousMappingPoint lesserValue="112" equalValue="112" greaterValue="112" attrValue="0.258891676194724"/>
+     <continuousMappingPoint lesserValue="255" equalValue="255" greaterValue="255" attrValue="13.316275202828"/>
     </continuousMapping>
    </visualProperty>
    <visualProperty name="EDGE_UNSELECTED_PAINT" default="#404040"/>
    <visualProperty name="EDGE_VISIBLE" default="true"/>
    <visualProperty name="EDGE_WIDTH" default="2.0">
     <continuousMapping attributeType="float" attributeName="significantJaccard">
-     <continuousMappingPoint lesserValue="1" equalValue="1" greaterValue="1" attrValue="0.0143198090692124"/>
-     <continuousMappingPoint lesserValue="30" equalValue="30" greaterValue="30" attrValue="0.911504424778761"/>
+     <continuousMappingPoint lesserValue="1" equalValue="1" greaterValue="1" attrValue="0.0102564102564103"/>
+     <continuousMappingPoint lesserValue="30" equalValue="30" greaterValue="30" attrValue="0.905172413793103"/>
     </continuousMapping>
    </visualProperty>
   </edge>
