@@ -1,7 +1,7 @@
 # lmpc-infection-rnaseq
 Supplemental files, other data and analysis for the manuscript "The mouse gastric surface epithelial cell and its response to early Helicobacter pylori infection".
 
-The supplemental files are in the supplemental files folder.
+The supplemental files are in the supplemental files folder https://github.com/mattias-erhardsson/lmpc-infection-rnaseq/tree/main/Virulence%20supplemental%20files.
 
 R version 4.3.2 is used. Renv is used for package version control. In script 4 you need to launch Cytoscape before running through the script. Script 7 is a jupyter notebook python script, not an R script.
 
